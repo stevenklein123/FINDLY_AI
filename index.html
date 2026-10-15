@@ -8,8 +8,10 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700;800&family=Space+Grotesk:wght@500;600&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Merriweather:wght@400;700;900&family=Montserrat:wght@500;600;700;800&family=Space+Grotesk:wght@500;600&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="styles.css" />
   <link rel="icon" type="image/png" href="images/eye.png" />
+
 </head>
 <body>
   <header class="site-header">
@@ -137,8 +139,6 @@
   <!-- Auth dialog: intro, register and login views -->
   <dialog id="authDialog" class="auth-dialog" data-mode="intro" aria-labelledby="authTitle">
     <div class="auth-wrap">
-      <button id="authClose" class="auth-close" type="button" aria-label="Close">&times;</button>
-
       <!-- INTRO -->
       <section class="view view-intro">
         <div class="intro-card">
@@ -149,7 +149,6 @@
           <h2 id="authTitle">Hi QCUian!</h2>
           <p id="authMsg">Welcome to Findly AI, a lost and found system for Quezon City University. To create an account please click “Get Started” below.</p>
           <button id="startBtn" class="btn btn-teal" type="button">Get Started</button>
-          <button class="link-btn" type="button" data-switch="login">I already have an account</button>
         </div>
       </section>
 

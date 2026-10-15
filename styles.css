@@ -323,3 +323,62 @@ a { color: inherit; }
   html { scroll-behavior: auto; }
   .btn { transition: none; }
 }
+/* ---------- Login view: glass look ---------- */
+.view-login .auth-card {
+  background: rgba(255,255,255,.18);
+  border: 1px solid rgba(255,255,255,.65);
+  -webkit-backdrop-filter: blur(14px) saturate(140%);
+  backdrop-filter: blur(14px) saturate(140%);
+  box-shadow:
+    0 8px 28px rgba(11,42,91,.22),
+    inset 0 1px 0 rgba(255,255,255,.8);
+}
+
+/* Form panel: see-through, with a soft light sheen */
+.view-login .auth-form {
+  background: linear-gradient(135deg, rgba(255,255,255,.55), rgba(255,255,255,.18));
+}
+
+/* Inputs: frosted instead of solid white */
+.view-login .auth-form input {
+  background: rgba(255,255,255,.55);
+  border-color: rgba(11,42,91,.85);
+}
+.view-login .auth-form input:focus {
+  background: rgba(255,255,255,.85);
+}
+
+/* Google button: frosted too */
+.view-login .auth-form .btn-google {
+  background: rgba(255,255,255,.55);
+}
+
+/* ---------- Register view: glass look (same as Login) ---------- */
+.view-register .auth-card {
+  background: rgba(255,255,255,.18);
+  border: 1px solid rgba(255,255,255,.65);
+  -webkit-backdrop-filter: blur(14px) saturate(140%);
+  backdrop-filter: blur(14px) saturate(140%);
+  box-shadow:
+    0 8px 28px rgba(11,42,91,.22),
+    inset 0 1px 0 rgba(255,255,255,.8);
+}
+
+/* Form panel: see-through, with a soft light sheen */
+.view-register .auth-form {
+  background: linear-gradient(135deg, rgba(255,255,255,.55), rgba(255,255,255,.18));
+}
+
+/* Inputs: frosted instead of solid white */
+.view-register .auth-form input {
+  background: rgba(255,255,255,.55);
+  border-color: rgba(11,42,91,.85);
+}
+.view-register .auth-form input:focus {
+  background: rgba(255,255,255,.85);
+}
+
+/* Google button: frosted too */
+.view-register .auth-form .btn-google {
+  background: rgba(255,255,255,.55);
+}
