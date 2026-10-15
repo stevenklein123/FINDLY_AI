@@ -147,12 +147,12 @@
 
     registerForm.reset();
     if (!data.session) {
+      // Email confirmation is on: no session yet, so stay on the landing page.
       authDialog.close();
       showToast("Account created. Check your email to confirm it, then log in.");
     } else {
       window.location.href = "student.html";
     }
-    // If a session exists, onAuthChange closes the dialog and updates the header.
   });
 
   // Login with email + password
@@ -176,42 +176,40 @@
           : error.message
       );
     }
-        loginForm.reset();
+    loginForm.reset();
     window.location.href = "student.html";
-    // onAuthChange closes the dialog and updates the header.
   });
 
   signOutBtn.addEventListener("click", async () => {
     await FindlyAuth.signOut();
+    sessionStorage.removeItem("findly_intent");
     renderUser(null);
     showToast("You’ve signed out.");
   });
 
   // "I lost something" / "I found something"
   async function handleIntent(intent) {
+    // Always remember what they wanted so student.html can open the right form.
+    sessionStorage.setItem("findly_intent", intent);
+
     const user = await FindlyAuth.getUser();
+
     if (!user) {
-      sessionStorage.setItem("findly_intent", intent);
-          window.location.href = "student.html";
-      openAuthDialog(
-        "intro",
-        intent === "lost"
-          ? "Sign in to report an item you lost. New here? Click “Get Started” to create an account."
-          : "Sign in to report an item you found. New here? Click “Get Started” to create an account."
-      );
+      // NOT logged in: show the "Hi QCUian! / Get Started" card. No redirect.
+      openAuthDialog("intro");
       return;
     }
-    // Next phase: route to the report form.
-    showToast(
-      intent === "lost" ? "Lost item form is coming soon." : "Found item form is coming soon."
-    );
+
+    // Logged in: go to the report page.
+    window.location.href = "student.html";
   }
   document.querySelectorAll("[data-intent]").forEach((btn) =>
     btn.addEventListener("click", () => handleIntent(btn.dataset.intent))
   );
 
-  // Continue what the person started before signing in.
-   function resumeIntent(user) {
+  // After a sign-in (including the Google redirect), continue what the
+  // person started before signing in. Only runs if they clicked lost/found.
+  function resumeIntent(user) {
     if (user && sessionStorage.getItem("findly_intent")) {
       window.location.href = "student.html"; // student.html reads and clears the intent
     }
