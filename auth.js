@@ -68,6 +68,7 @@ const redirectUrl = () =>
   }
 
   window.FindlyAuth = {
+    client, 
     configured,
     signInWithGoogle,
     signUpWithEmail,

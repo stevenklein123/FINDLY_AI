@@ -265,6 +265,31 @@ $('#photo').onchange = e => {
   $('#preview').src = url; $('#preview').style.display = 'block';
   $('#matchImg').src = url;
 };
+/* AI: read the photo and fill in the form */
+async function analyzePhoto(e){
+  const file = e.target.files[0]; if (!file) return;
+  const hint = $('#dropHint'), old = hint.textContent;
+  hint.textContent = 'Analyzing photo…';
+  try {
+    const image = await new Promise((res, rej) => {
+      const r = new FileReader();
+      r.onload = () => res(r.result.split(',')[1]);
+      r.onerror = () => rej(r.error);
+      r.readAsDataURL(file);
+    });
+    const { data, error } = await FindlyAuth.client.functions.invoke('analyze-item', {
+      body: { image, mimeType: file.type }
+    });
+    if (error || data?.error) throw error || new Error(data.error);
+    const f = $('#reportForm').elements;
+    ['item','category','color','brand','size','marks','desc'].forEach(k => { if (data[k]) f[k].value = data[k]; });
+    toast('Details filled in. Please check them.');
+  } catch (err) {
+    console.error(err);
+    toast('Could not analyze the photo. Fill in the details manually.');
+  } finally { hint.textContent = old; }
+}
+$('#photo').addEventListener('change', analyzePhoto);
 /* time chips */
 $('#nowBtn').onclick = () => { $('#nowBtn').classList.add('on'); $('#timeBtn').classList.remove('on'); $('#time').disabled = true; };
 $('#timeBtn').onclick = () => { $('#timeBtn').classList.add('on'); $('#nowBtn').classList.remove('on'); $('#time').disabled = false; $('#time').focus(); };
