@@ -3,6 +3,6 @@
 // Supabase Dashboard > Project Settings > API.
 // NEVER put the service-role key or Google OAuth Client Secret here.
 window.FINDLY_CONFIG = {
-  SUPABASE_URL: "https://YOUR-PROJECT-REF.supabase.co",
-  SUPABASE_ANON_KEY: "YOUR-PUBLISHABLE-ANON-KEY",
+  SUPABASE_URL: "https://xsplowpnjlliybhavsmm.supabase.co",
+  SUPABASE_ANON_KEY: "sb_publishable_xdrdyWDI01dQVXKO1j5lWw_7t_-E_gF",
 };
