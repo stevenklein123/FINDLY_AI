@@ -147,9 +147,10 @@
 
     registerForm.reset();
     if (!data.session) {
-      // Email confirmation is turned on in Supabase.
       authDialog.close();
       showToast("Account created. Check your email to confirm it, then log in.");
+    } else {
+      window.location.href = "student.html";
     }
     // If a session exists, onAuthChange closes the dialog and updates the header.
   });
@@ -175,7 +176,8 @@
           : error.message
       );
     }
-    loginForm.reset();
+        loginForm.reset();
+    window.location.href = "student.html";
     // onAuthChange closes the dialog and updates the header.
   });
 
@@ -190,6 +192,7 @@
     const user = await FindlyAuth.getUser();
     if (!user) {
       sessionStorage.setItem("findly_intent", intent);
+          window.location.href = "student.html";
       openAuthDialog(
         "intro",
         intent === "lost"
@@ -208,11 +211,9 @@
   );
 
   // Continue what the person started before signing in.
-  function resumeIntent(user) {
-    const intent = sessionStorage.getItem("findly_intent");
-    if (user && intent) {
-      sessionStorage.removeItem("findly_intent");
-      showToast("Signed in. " + (intent === "lost" ? "Lost" : "Found") + " item form is coming soon.");
+   function resumeIntent(user) {
+    if (user && sessionStorage.getItem("findly_intent")) {
+      window.location.href = "student.html"; // student.html reads and clears the intent
     }
   }
 

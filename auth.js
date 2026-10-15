@@ -16,8 +16,10 @@
   });
 
   // Must be listed under Supabase > Authentication > URL Configuration > Redirect URLs
-  const redirectUrl = () => window.location.origin + window.location.pathname;
-
+const redirectUrl = () =>
+  window.location.origin +
+  window.location.pathname.replace(/[^/]*$/, "") +
+  "student.html";
   async function signInWithGoogle() {
     if (!client) return notConfigured();
     return client.auth.signInWithOAuth({

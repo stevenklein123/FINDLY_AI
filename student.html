@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Findly AI – Student Home</title>
+<link rel="icon" type="image/png" href="images/eye.png" />
+<link href="https://fonts.googleapis.com/css2?family=Merriweather:wght@700;900&family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+<style>
+:root{--navy:#12306b;--navy-deep:#0b2a5b;--yellow:#ffc928;--sky:#a9cdfb;--bg:#eaf3fc;--ink:#0b1b36;--line:#2a6fe0;
+--font:"Montserrat",system-ui,sans-serif;--serif:"Merriweather",Georgia,serif}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%}
+body{font-family:var(--font);background:#dfe6f1;color:var(--ink)}
+.app{max-width:430px;min-height:100vh;margin:0 auto;background:var(--bg);position:relative;display:flex;flex-direction:column;overflow:hidden}
+.app[hidden]{display:none}
+.app::before{content:"";position:absolute;right:-60px;top:130px;width:200px;height:200px;background:linear-gradient(135deg,#cfe3fb,transparent);transform:rotate(45deg);pointer-events:none}
+.app::after{content:"";position:absolute;left:-90px;bottom:90px;width:200px;height:260px;background:linear-gradient(45deg,#8fbdf0,transparent);clip-path:polygon(0 0,100% 50%,0 100%);pointer-events:none}
+.bar{background:var(--navy);color:#fff;padding:calc(env(safe-area-inset-top,0px) + 1.1rem) 1.1rem 1.1rem;border-radius:0 0 22px 22px;display:flex;align-items:center;gap:.7rem;position:relative;z-index:2}
+.bar h1{margin:0;font-family:var(--serif);font-size:1.15rem;font-weight:700;flex:1}
+.bar img{width:46px;height:46px;border-radius:50%;object-fit:cover}
+.icon-btn{background:none;border:0;color:var(--yellow);cursor:pointer;padding:.3rem;display:grid;place-items:center}
+.icon-btn svg{width:26px;height:26px}
+main{flex:1;padding:1.2rem 1.1rem 5.5rem;position:relative;z-index:1}
+.screen{display:none}.screen.on{display:block}
+.hello{font-family:var(--serif);font-size:2rem;font-weight:900;color:var(--navy);margin:.6rem 0 0}
+.hello span{color:var(--yellow)}
+.ask{font-family:var(--serif);margin:.1rem 0 1.4rem;font-size:.95rem}
+.choose{background:#fff;border-radius:16px;padding:1.1rem;display:grid;gap:.5rem;text-align:center;font-size:.7rem;color:#555}
+.btn{font:inherit;font-weight:700;font-size:1rem;border-radius:10px;padding:.8rem;cursor:pointer;border:2px solid var(--navy);width:100%}
+.btn-o{background:#fff;color:var(--navy)}
+.btn-f{background:var(--navy);color:#fff}
+.btn-pill{border-radius:999px;border:0;background:var(--navy);color:#fff;padding:.9rem;font-size:1rem;display:block;margin:1.2rem auto 0;width:92%}
+.notif{margin-top:1.6rem;background:linear-gradient(135deg,#ffe07a,#ffb629);border-radius:14px;padding:.8rem;display:flex;align-items:center;gap:.8rem}
+.notif[hidden]{display:none}
+.thumb{width:42px;height:42px;border-radius:10px;background:#c9b98f;flex:none}
+.notif p{margin:0;flex:1;font-size:.68rem;line-height:1.35}
+.notif b{display:block;font-size:.72rem;letter-spacing:.02em;margin-bottom:.1rem}
+.notif button{background:var(--navy);color:#fff;border:0;border-radius:999px;font:inherit;font-weight:700;font-size:.7rem;padding:.45rem .9rem;cursor:pointer}
+.drop{border:2.5px dashed var(--navy);border-radius:14px;background:#fff;padding:1.7rem 1rem;text-align:center;display:block;cursor:pointer;overflow:hidden}
+.drop svg{width:34px;height:34px;color:var(--navy)}
+.drop b{display:block;font-size:.8rem;margin-top:.4rem}
+.drop small{font-size:.68rem;color:#333}
+.drop img{max-width:100%;max-height:180px;border-radius:8px;display:none;margin:0 auto}
+.drop input{display:none}
+label.f{display:block;margin-top:.8rem;font-size:.78rem;font-weight:600;color:var(--navy)}
+label.f i{color:#d0021b;font-style:normal}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:.7rem}
+.in{display:block;width:100%;margin-top:.25rem;padding:.6rem .7rem;border:1.5px solid var(--line);border-radius:8px;background:#fff;font:inherit;font-size:.72rem;color:var(--ink)}
+.in::placeholder{color:#8b97ad}
+textarea.in{resize:none;min-height:56px}
+.when{display:grid;grid-template-columns:auto auto 1fr;gap:.5rem;margin-top:.3rem}
+.chip{font:inherit;font-weight:700;font-size:.72rem;border-radius:999px;padding:.5rem .9rem;cursor:pointer;border:2px solid var(--line);background:#fff;color:var(--navy)}
+.chip.on{background:var(--yellow);border-color:var(--yellow)}
+.match-img{height:150px;border-radius:14px;background:var(--sky);position:relative;overflow:hidden}
+.match-img img{width:100%;height:100%;object-fit:cover;display:none}
+.pct{position:absolute;right:12px;bottom:12px;background:var(--yellow);font-weight:700;font-size:.72rem;padding:.35rem .8rem;border-radius:999px}
+.details{background:#fff;border-radius:14px;margin-top:1rem;padding:.4rem 1rem}
+.details div{display:flex;justify-content:space-between;gap:1rem;padding:.55rem 0;font-size:.72rem;border-bottom:1px solid #eef1f6}
+.details div:last-child{border:0}
+.details dt{color:#555}.details dd{margin:0;font-weight:700;text-align:right}
+.note{font-size:.62rem;margin:.8rem .2rem 0}
+.tabbar{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:430px;background:var(--navy);height:calc(34px + env(safe-area-inset-bottom,0px));z-index:3;display:flex;justify-content:center;align-items:center}
+.tabbar span{width:62px;height:5px;border-radius:3px;background:#000}
+.toast{position:fixed;left:50%;bottom:60px;transform:translateX(-50%);background:var(--yellow);font-weight:700;font-size:.8rem;padding:.6rem 1rem;border-radius:999px;z-index:9}
+.toast[hidden]{display:none}
+:focus-visible{outline:3px solid var(--yellow);outline-offset:2px}
+@media (prefers-color-scheme:dark){body{background:#0a1226}}
+
+/* ---------- Responsive ---------- */
+.in,.row>*,.when>*{min-width:0}
+.tabbar{display:none}                       /* Figma's fake home bar; real phones have their own */
+.app{min-height:100vh;min-height:100dvh}
+main{padding-bottom:calc(1.5rem + env(safe-area-inset-bottom,0px))}
+.toast{bottom:calc(1rem + env(safe-area-inset-bottom,0px));width:max-content;max-width:90vw;text-align:center}
+
+/* Phones */
+@media (max-width:500px){
+  .app{max-width:none}
+  main{padding:1rem 1rem calc(1.5rem + env(safe-area-inset-bottom,0px))}
+  .hello{font-size:1.7rem}
+  .in{font-size:16px;padding:.7rem .8rem}   /* 16px stops iOS zooming into fields */
+  label.f{font-size:.82rem}
+  .btn,.chip{min-height:46px}
+  .row{gap:.6rem}
+  .when{grid-template-columns:1fr 1fr}
+  .when .in{grid-column:1/-1}
+  .drop b{font-size:.88rem}.drop small{font-size:.75rem}
+  .details div{font-size:.82rem}
+  .note{font-size:.74rem}
+  .notif p{font-size:.76rem}.notif button{min-height:36px}
+}
+/* Very narrow phones: stack the paired fields */
+@media (max-width:340px){ .row{grid-template-columns:1fr} }
+
+.icon-btn[hidden]{display:none}
+.signout{display:flex;align-items:center;gap:.4rem;background:none;border:2px solid var(--yellow);color:var(--yellow);border-radius:999px;font:inherit;font-weight:700;font-size:.78rem;padding:.4rem .8rem;cursor:pointer;min-height:40px}
+.signout svg{width:18px;height:18px}
+.signout:hover{background:var(--yellow);color:var(--navy)}
+@media (max-width:500px){.signout{padding:0;width:40px;justify-content:center}.signout span{display:none}}
+body{background:var(--bg)}
+
+/* Tablet / desktop: full-width website layout */
+@media (min-width:768px){
+  .app{max-width:none;margin:0}
+  .bar{padding:1rem max(1.5rem,calc((100% - 1100px)/2 + 1.5rem))}
+  .bar h1{font-size:1.4rem}
+  main{width:100%;max-width:1100px;margin:0 auto;padding:2.5rem 1.5rem 3rem}
+  .in{font-size:.9rem}
+  label.f{font-size:.85rem}
+
+  /* Home: greeting left, choices right */
+  #home.on{display:grid;grid-template-columns:1fr 420px;column-gap:3rem;align-items:center}
+  .hello{font-size:3rem;grid-column:1;align-self:end}
+  .ask{font-size:1.15rem;grid-column:1;align-self:start}
+  .choose{grid-column:2;grid-row:1/span 2;padding:1.5rem;font-size:.85rem}
+  .notif{grid-column:1/-1;max-width:560px}
+
+  /* Report forms: photo on the left, details on the right */
+  #reportForm{display:grid;grid-template-columns:340px 1fr;column-gap:2.5rem;align-items:start}
+  #reportForm>*{grid-column:2}
+  #reportForm>.drop{grid-column:1;grid-row:1/span 12;position:sticky;top:1.5rem;padding:3rem 1.2rem}
+  #reportForm>.btn-pill{margin:1.4rem 0 0;width:100%}
+
+  /* Suggested match: photo left, details right */
+  #match.on{display:grid;grid-template-columns:1fr 1fr;column-gap:2.5rem;align-items:start}
+  .match-img{grid-column:1;grid-row:1/span 3;height:340px}
+  #match .details,#match .note,#match .btn-pill{grid-column:2}
+  #match .details{margin-top:0}
+  #match .btn-pill{margin:1.2rem 0 0;width:100%}
+}
+</style>
+</head>
+<body>
+<div class="app" hidden>
+  <header class="bar" id="bar">
+    <button class="icon-btn" id="back" aria-label="Back" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M15 4l-8 8 8 8"/></svg></button>
+    <img id="seal" src="images/eye.png" alt="" onerror="this.style.visibility='hidden'" />
+    <h1 id="title">QCU E-Finder</h1>
+    <button class="icon-btn" id="bell" aria-label="Notifications"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"><path d="M12 3a6 6 0 0 0-6 6v4l-2 3h16l-2-3V9a6 6 0 0 0-6-6z"/><path d="M10 19a2 2 0 0 0 4 0"/></svg></button>
+    <button class="signout" id="signOut" type="button" aria-label="Sign out"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 4H5v16h4"/><path d="M16 8l4 4-4 4M20 12H9"/></svg><span>Sign out</span></button>
+  </header>
+
+  <main>
+    <!-- HOME -->
+    <section class="screen on" id="home" data-title="QCU E-Finder">
+      <h2 class="hello">Hello, <span id="who">QCUian</span>!</h2>
+      <p class="ask">What would you like to do today?</p>
+      <div class="choose">
+        <button class="btn btn-o" data-go="lost">I lost something</button>
+        or
+        <button class="btn btn-f" data-go="found">I found something</button>
+      </div>
+      <div class="notif" id="notif" hidden>
+        <div class="thumb"></div>
+        <p><b>NOTIFICATION</b>Possible match for your missing item<br /><small id="notifPct">87% match</small></p>
+        <button type="button" data-go="match">View</button>
+      </div>
+    </section>
+
+    <!-- FOUND + LOST (same form, two modes) -->
+    <section class="screen" id="report">
+      <form id="reportForm" novalidate>
+        <label class="drop" id="drop">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M3 8h4l2-3h6l2 3h4v11H3z"/><circle cx="12" cy="13" r="3.5"/></svg>
+          <img id="preview" alt="Photo preview" />
+          <b>Take or upload photo (required)</b>
+          <small id="dropHint"></small>
+          <input type="file" id="photo" accept="image/*" capture="environment" />
+        </label>
+        <label class="f">Item name<input class="in" name="item" placeholder="e.g Black umbrella" required /></label>
+        <div class="row">
+          <label class="f">Category
+            <select class="in" name="category"><option value="">Select</option><option>Accessories</option><option>Bags</option><option>Books &amp; documents</option><option>Clothing</option><option>Electronics</option><option>ID &amp; cards</option><option>Keys</option><option>Other</option></select></label>
+          <label class="f">Color<input class="in" name="color" placeholder="e.g Black" /></label>
+        </div>
+        <div class="row">
+          <label class="f">Brand (if visible in photo)<input class="in" name="brand" placeholder="e.g Aquaflask" /></label>
+          <label class="f">Size<input class="in" name="size" placeholder="e.g Large" /></label>
+        </div>
+        <label class="f">Identifying marks<input class="in" name="marks" placeholder="Scratches, stickers, name tag" /></label>
+        <label class="f">Description<textarea class="in" name="desc" placeholder="Other details about the item"></textarea></label>
+        <label class="f"><span class="q"></span> <i>*</i><textarea class="in" name="place" placeholder="Building, room, area" required></textarea></label>
+        <div class="f" style="margin-top:.8rem"><span class="q2"></span> <i style="color:#d0021b;font-style:normal">*</i></div>
+        <div class="when">
+          <button type="button" class="chip on" id="nowBtn">Just now</button>
+          <button type="button" class="chip" id="timeBtn">Enter time</button>
+          <input class="in" id="time" style="margin:0" placeholder="HH:MM AM/PM" disabled />
+        </div>
+        <button class="btn btn-pill" type="submit" id="submitBtn"></button>
+      </form>
+    </section>
+
+    <!-- SUGGESTED MATCH -->
+    <section class="screen" id="match" data-title="Suggested Match">
+      <div class="match-img"><img id="matchImg" alt="Suggested item" /><span class="pct" id="pct">87% Match</span></div>
+      <dl class="details" style="margin-bottom:0">
+        <div><dt>Item name</dt><dd id="mName">Black umbrella</dd></div>
+        <div><dt>Category</dt><dd id="mCat">Accessories</dd></div>
+        <div><dt>Description</dt><dd id="mDesc">[Color, brand, marks]</dd></div>
+        <div><dt>Location</dt><dd id="mLoc">[Where it was found]</dd></div>
+        <div><dt>Date &amp; Time</dt><dd id="mWhen">[MM/DD/YYYY] 00:00 PM</dd></div>
+      </dl>
+      <p class="note">The owner and the percentage match were notified. Submit a claim so the admin can verify ownership.</p>
+      <button class="btn btn-pill" type="button" id="claimBtn">Submit Claim</button>
+    </section>
+  </main>
+</div>
+<div class="toast" id="toast" hidden></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script src="config.js"></script>
+<script src="auth.js"></script>
+<script>
+const $ = s => document.querySelector(s);
+const screens = {home:$('#home'), report:$('#report'), match:$('#match')};
+let mode = 'lost', history = ['home'];
+
+/* Guard: only signed-in students can see this page */
+(async () => {
+  const user = await FindlyAuth.getUser();
+  if (!user) { window.location.replace('index.html'); return; }
+  const md = user.user_metadata || {};
+  const name = md.full_name || md.name || user.email || 'QCUian';
+  $('#who').textContent = name.split(' ')[0];
+  document.querySelector('.app').hidden = false;
+  const intent = sessionStorage.getItem('findly_intent');
+  if (intent) { sessionStorage.removeItem('findly_intent'); go(intent); }
+})();
+$('#signOut').onclick = async () => {
+  await FindlyAuth.signOut();
+  window.location.replace('index.html');
+};
+
+function show(name){
+  Object.values(screens).forEach(s => s.classList.remove('on'));
+  const key = (name === 'found' || name === 'lost') ? 'report' : name;
+  screens[key].classList.add('on');
+  const isHome = key === 'home';
+  $('#back').hidden = isHome; $('#seal').style.display = isHome ? '' : 'none'; $('#bell').style.visibility = isHome ? '' : 'hidden'; $('#signOut').style.display = isHome ? '' : 'none';
+  $('#title').textContent = key === 'report' ? (mode === 'found' ? 'Report Found Item' : 'Report Missing Item') : screens[key].dataset.title;
+  window.scrollTo(0,0);
+}
+function go(name){
+  if (name === 'found' || name === 'lost') { mode = name; setupReport(); }
+  history.push(name); show(name);
+}
+function setupReport(){
+  const f = mode === 'found';
+  $('#dropHint').textContent = f ? 'You will surrender the item to the Admin' : 'AI analyzes your photo to find a match';
+  $('.q').textContent = f ? 'Where did you find the item?' : 'Where did you lose the item?';
+  $('.q2').textContent = f ? 'When did you find the item?' : 'When did you lose the item?';
+  $('#submitBtn').textContent = f ? 'Submit Found Item' : 'Submit and Find Match';
+}
+document.addEventListener('click', e => {
+  const t = e.target.closest('[data-go]'); if (t) go(t.dataset.go);
+});
+$('#back').onclick = () => { history.pop(); show(history[history.length-1] || 'home'); };
+$('#bell').onclick = () => { if (!$('#notif').hidden) go('match'); else toast('No new notifications'); };
+
+/* photo preview */
+$('#photo').onchange = e => {
+  const file = e.target.files[0]; if (!file) return;
+  const url = URL.createObjectURL(file);
+  $('#preview').src = url; $('#preview').style.display = 'block';
+  $('#matchImg').src = url;
+};
+/* time chips */
+$('#nowBtn').onclick = () => { $('#nowBtn').classList.add('on'); $('#timeBtn').classList.remove('on'); $('#time').disabled = true; };
+$('#timeBtn').onclick = () => { $('#timeBtn').classList.add('on'); $('#nowBtn').classList.remove('on'); $('#time').disabled = false; $('#time').focus(); };
+
+$('#reportForm').addEventListener('submit', e => {
+  e.preventDefault();
+  const fd = new FormData(e.target);
+  if (!$('#photo').files[0]) return toast('Please add a photo first');
+  if (!fd.get('item').trim() || !fd.get('place').trim()) return toast('Fill in the item name and location');
+  const when = $('#nowBtn').classList.contains('on') ? new Date() : null;
+  const stamp = when ? when.toLocaleDateString('en-US') + ' ' + when.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'}) : $('#time').value;
+  /* TODO: save report to Supabase + run AI image match here */
+  if (mode === 'found') {
+    toast('Found item submitted. Please bring it to the Admin.');
+    e.target.reset(); $('#preview').style.display = 'none'; history = ['home']; show('home');
+  } else {
+    $('#mName').textContent = fd.get('item');
+    $('#mCat').textContent = fd.get('category') || '—';
+    $('#mDesc').textContent = [fd.get('color'), fd.get('brand'), fd.get('marks')].filter(Boolean).join(', ') || '—';
+    $('#mLoc').textContent = fd.get('place');
+    $('#mWhen').textContent = stamp;
+    $('#matchImg').style.display = 'block';
+    $('#notif').hidden = false;
+    go('match');
+  }
+});
+$('#claimBtn').onclick = () => { toast('Claim submitted. The admin will verify ownership.'); history = ['home']; show('home'); };
+
+let tt; function toast(m){ const t = $('#toast'); t.textContent = m; t.hidden = false; clearTimeout(tt); tt = setTimeout(() => t.hidden = true, 3200); }
+setupReport();
+</script>
+</body>
+</html>
