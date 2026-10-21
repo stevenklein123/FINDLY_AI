@@ -1,0 +1,122 @@
+:root{--navy:#12306b;--navy-deep:#0b2a5b;--yellow:#ffc928;--sky:#a9cdfb;--bg:#eaf3fc;--ink:#0b1b36;--line:#2a6fe0;
+--font:"Montserrat",system-ui,sans-serif;--serif:"Merriweather",Georgia,serif}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%}
+body{font-family:var(--font);background:#dfe6f1;color:var(--ink)}
+.app{max-width:430px;min-height:100vh;margin:0 auto;background:var(--bg);position:relative;display:flex;flex-direction:column;overflow:hidden}
+.app[hidden]{display:none}
+.app::before{content:"";position:absolute;right:-60px;top:130px;width:200px;height:200px;background:linear-gradient(135deg,#cfe3fb,transparent);transform:rotate(45deg);pointer-events:none}
+.app::after{content:"";position:absolute;left:-90px;bottom:90px;width:200px;height:260px;background:linear-gradient(45deg,#8fbdf0,transparent);clip-path:polygon(0 0,100% 50%,0 100%);pointer-events:none}
+.bar{background:var(--navy);color:#fff;padding:calc(env(safe-area-inset-top,0px) + 1.1rem) 1.1rem 1.1rem;border-radius:0 0 22px 22px;display:flex;align-items:center;gap:.7rem;position:relative;z-index:2}
+.bar h1{margin:0;font-family:var(--serif);font-size:1.15rem;font-weight:700;flex:1}
+.bar img{width:46px;height:46px;border-radius:50%;object-fit:cover}
+.icon-btn{background:none;border:0;color:var(--yellow);cursor:pointer;padding:.3rem;display:grid;place-items:center}
+.icon-btn svg{width:26px;height:26px}
+main{flex:1;padding:1.2rem 1.1rem 5.5rem;position:relative;z-index:1}
+.screen{display:none}.screen.on{display:block}
+.hello{font-family:var(--serif);font-size:2rem;font-weight:900;color:var(--navy);margin:.6rem 0 0}
+.hello span{color:var(--yellow)}
+.ask{font-family:var(--serif);margin:.1rem 0 1.4rem;font-size:.95rem}
+.choose{background:#fff;border-radius:16px;padding:1.1rem;display:grid;gap:.5rem;text-align:center;font-size:.7rem;color:#555}
+.btn{font:inherit;font-weight:700;font-size:1rem;border-radius:10px;padding:.8rem;cursor:pointer;border:2px solid var(--navy);width:100%}
+.btn-o{background:#fff;color:var(--navy)}
+.btn-f{background:var(--navy);color:#fff}
+.btn-pill{border-radius:999px;border:0;background:var(--navy);color:#fff;padding:.9rem;font-size:1rem;display:block;margin:1.2rem auto 0;width:92%}
+.notif{margin-top:1.6rem;background:linear-gradient(135deg,#ffe07a,#ffb629);border-radius:14px;padding:.8rem;display:flex;align-items:center;gap:.8rem}
+.notif[hidden]{display:none}
+.thumb{width:42px;height:42px;border-radius:10px;background:#c9b98f;flex:none}
+.notif p{margin:0;flex:1;font-size:.68rem;line-height:1.35}
+.notif b{display:block;font-size:.72rem;letter-spacing:.02em;margin-bottom:.1rem}
+.notif button{background:var(--navy);color:#fff;border:0;border-radius:999px;font:inherit;font-weight:700;font-size:.7rem;padding:.45rem .9rem;cursor:pointer}
+.drop{border:2.5px dashed var(--navy);border-radius:14px;background:#fff;padding:1.7rem 1rem;text-align:center;display:block;cursor:pointer;overflow:hidden}
+.drop svg{width:34px;height:34px;color:var(--navy)}
+.drop b{display:block;font-size:.8rem;margin-top:.4rem}
+.drop small{font-size:.68rem;color:#333}
+.drop img{max-width:100%;max-height:180px;border-radius:8px;display:none;margin:0 auto}
+.drop input{display:none}
+label.f{display:block;margin-top:.8rem;font-size:.78rem;font-weight:600;color:var(--navy)}
+label.f i{color:#d0021b;font-style:normal}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:.7rem}
+.in{display:block;width:100%;margin-top:.25rem;padding:.6rem .7rem;border:1.5px solid var(--line);border-radius:8px;background:#fff;font:inherit;font-size:.72rem;color:var(--ink)}
+.in::placeholder{color:#8b97ad}
+textarea.in{resize:none;min-height:56px}
+.when{display:grid;grid-template-columns:auto auto 1fr;gap:.5rem;margin-top:.3rem}
+.chip{font:inherit;font-weight:700;font-size:.72rem;border-radius:999px;padding:.5rem .9rem;cursor:pointer;border:2px solid var(--line);background:#fff;color:var(--navy)}
+.chip.on{background:var(--yellow);border-color:var(--yellow)}
+.match-img{height:150px;border-radius:14px;background:var(--sky);position:relative;overflow:hidden}
+.match-img img{width:100%;height:100%;object-fit:cover;display:none}
+.pct{position:absolute;right:12px;bottom:12px;background:var(--yellow);font-weight:700;font-size:.72rem;padding:.35rem .8rem;border-radius:999px}
+.details{background:#fff;border-radius:14px;margin-top:1rem;padding:.4rem 1rem}
+.details div{display:flex;justify-content:space-between;gap:1rem;padding:.55rem 0;font-size:.72rem;border-bottom:1px solid #eef1f6}
+.details div:last-child{border:0}
+.details dt{color:#555}.details dd{margin:0;font-weight:700;text-align:right}
+.note{font-size:.62rem;margin:.8rem .2rem 0}
+.tabbar{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:430px;background:var(--navy);height:calc(34px + env(safe-area-inset-bottom,0px));z-index:3;display:flex;justify-content:center;align-items:center}
+.tabbar span{width:62px;height:5px;border-radius:3px;background:#000}
+.toast{position:fixed;left:50%;bottom:60px;transform:translateX(-50%);background:var(--yellow);font-weight:700;font-size:.8rem;padding:.6rem 1rem;border-radius:999px;z-index:9}
+.toast[hidden]{display:none}
+:focus-visible{outline:3px solid var(--yellow);outline-offset:2px}
+@media (prefers-color-scheme:dark){body{background:#0a1226}}
+
+/* ---------- Responsive ---------- */
+.in,.row>*,.when>*{min-width:0}
+.tabbar{display:none}                       /* Figma's fake home bar; real phones have their own */
+.app{min-height:100vh;min-height:100dvh}
+main{padding-bottom:calc(1.5rem + env(safe-area-inset-bottom,0px))}
+.toast{bottom:calc(1rem + env(safe-area-inset-bottom,0px));width:max-content;max-width:90vw;text-align:center}
+
+/* Phones */
+@media (max-width:500px){
+  .app{max-width:none}
+  main{padding:1rem 1rem calc(1.5rem + env(safe-area-inset-bottom,0px))}
+  .hello{font-size:1.7rem}
+  .in{font-size:16px;padding:.7rem .8rem}   /* 16px stops iOS zooming into fields */
+  label.f{font-size:.82rem}
+  .btn,.chip{min-height:46px}
+  .row{gap:.6rem}
+  .when{grid-template-columns:1fr 1fr}
+  .when .in{grid-column:1/-1}
+  .drop b{font-size:.88rem}.drop small{font-size:.75rem}
+  .details div{font-size:.82rem}
+  .note{font-size:.74rem}
+  .notif p{font-size:.76rem}.notif button{min-height:36px}
+}
+/* Very narrow phones: stack the paired fields */
+@media (max-width:340px){ .row{grid-template-columns:1fr} }
+
+.icon-btn[hidden]{display:none}
+.signout{display:flex;align-items:center;gap:.4rem;background:none;border:2px solid var(--yellow);color:var(--yellow);border-radius:999px;font:inherit;font-weight:700;font-size:.78rem;padding:.4rem .8rem;cursor:pointer;min-height:40px}
+.signout svg{width:18px;height:18px}
+.signout:hover{background:var(--yellow);color:var(--navy)}
+@media (max-width:500px){.signout{padding:0;width:40px;justify-content:center}.signout span{display:none}}
+body{background:var(--bg)}
+
+/* Tablet / desktop: full-width website layout */
+@media (min-width:768px){
+  .app{max-width:none;margin:0}
+  .bar{padding:1rem max(1.5rem,calc((100% - 1100px)/2 + 1.5rem))}
+  .bar h1{font-size:1.4rem}
+  main{width:100%;max-width:1100px;margin:0 auto;padding:2.5rem 1.5rem 3rem}
+  .in{font-size:.9rem}
+  label.f{font-size:.85rem}
+
+  /* Home: greeting left, choices right */
+  #home.on{display:grid;grid-template-columns:1fr 420px;column-gap:3rem;align-items:center}
+  .hello{font-size:3rem;grid-column:1;align-self:end}
+  .ask{font-size:1.15rem;grid-column:1;align-self:start}
+  .choose{grid-column:2;grid-row:1/span 2;padding:1.5rem;font-size:.85rem}
+  .notif{grid-column:1/-1;max-width:560px}
+
+  /* Report forms: photo on the left, details on the right */
+  #reportForm{display:grid;grid-template-columns:340px 1fr;column-gap:2.5rem;align-items:start}
+  #reportForm>*{grid-column:2}
+  #reportForm>.drop{grid-column:1;grid-row:1/span 12;position:sticky;top:1.5rem;padding:3rem 1.2rem}
+  #reportForm>.btn-pill{margin:1.4rem 0 0;width:100%}
+
+  /* Suggested match: photo left, details right */
+  #match.on{display:grid;grid-template-columns:1fr 1fr;column-gap:2.5rem;align-items:start}
+  .match-img{grid-column:1;grid-row:1/span 3;height:340px}
+  #match .details,#match .note,#match .btn-pill{grid-column:2}
+  #match .details{margin-top:0}
+  #match .btn-pill{margin:1.2rem 0 0;width:100%}
+}
