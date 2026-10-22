@@ -93,14 +93,48 @@ $('#photo').addEventListener('change', analyzePhoto);
 $('#nowBtn').onclick = () => { $('#nowBtn').classList.add('on'); $('#timeBtn').classList.remove('on'); $('#time').disabled = true; };
 $('#timeBtn').onclick = () => { $('#timeBtn').classList.add('on'); $('#nowBtn').classList.remove('on'); $('#time').disabled = false; $('#time').focus(); };
 
-$('#reportForm').addEventListener('submit', e => {
+$('#reportForm').addEventListener('submit', async e => {
   e.preventDefault();
   const fd = new FormData(e.target);
   if (!$('#photo').files[0]) return toast('Please add a photo first');
   if (!fd.get('item').trim() || !fd.get('place').trim()) return toast('Fill in the item name and location');
   const when = $('#nowBtn').classList.contains('on') ? new Date() : null;
   const stamp = when ? when.toLocaleDateString('en-US') + ' ' + when.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'}) : $('#time').value;
-  /* TODO: save report to Supabase + run AI image match here */
+  let occurredAt = new Date();
+  if (!when) {
+    const m = $('#time').value.trim().match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
+    if (!m) return toast('Enter the time like 02:30 PM');
+    let h = Number(m[1]) % 12; if (m[3].toUpperCase() === 'PM') h += 12;
+    occurredAt.setHours(h, Number(m[2]), 0, 0);
+  }
+  const user = await FindlyAuth.getUser();
+  const sb = FindlyAuth.client;
+  const file = $('#photo').files[0];
+  const path = `${user.id}/${Date.now()}-${file.name.replace(/[^\w.-]/g, '_')}`;
+  $('#submitBtn').disabled = true;
+  try {
+    const up = await sb.storage.from('item-images').upload(path, file);
+    if (up.error) { console.error(up.error); return toast('Photo upload failed: ' + up.error.message); }
+    const { error } = await sb.from(mode === 'found' ? 'found_items' : 'claim_items').insert({
+      photo_url: sb.storage.from('item-images').getPublicUrl(path).data.publicUrl,
+      item_name: fd.get('item').trim(),
+      category: fd.get('category') || null,
+      color: fd.get('color') || null,
+      brand: fd.get('brand') || null,
+      size: fd.get('size') || null,
+      marks: fd.get('marks') || null,
+      description: fd.get('desc') || null,
+      place: fd.get('place').trim(),
+      occurred_at: occurredAt.toISOString()
+    });
+    if (error) { console.error(error); return toast('Could not save: ' + error.message); }
+  } catch (err) {
+    console.error(err);
+    return toast('Network problem. Please try again.');
+  } finally {
+    $('#submitBtn').disabled = false;
+  }
+
   if (mode === 'found') {
     toast('Found item submitted. Please bring it to the Admin.');
     e.target.reset(); $('#preview').style.display = 'none'; history = ['home']; show('home');
