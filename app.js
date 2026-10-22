@@ -216,8 +216,11 @@
   }
 
   // Init
-  if (!FindlyAuth.configured) {
-    console.warn("Findly AI: add your Supabase URL and anon key in config.js.");
+    // Friendly message when the email confirmation link was already used or expired.
+  if (location.hash.includes("error_code=otp_expired")) {
+    history.replaceState({}, document.title, location.pathname);
+    openAuthDialog("login");
+    showError("Your email may already be confirmed. Please try logging in.");
   }
 
   FindlyAuth.getUser().then((user) => {
