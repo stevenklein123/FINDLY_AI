@@ -66,7 +66,7 @@ async function analyzePhoto(e){
       r.readAsDataURL(file);
     });
     const ctrl = new AbortController();
-    const timer = setTimeout(() => ctrl.abort(), 30000); // stop waiting after 30s
+    const timer = setTimeout(() => ctrl.abort(), 60000); // stop waiting after 60s
     const res = await fetch(`${API_URL}/analyze`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
