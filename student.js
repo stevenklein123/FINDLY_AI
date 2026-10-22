@@ -1,4 +1,4 @@
-const API_URL = 'http://127.0.0.1:5000'; // change to your hosted backend URL after deploying
+const API_URL = 'https://findly-ai-v6k7.onrender.com'; // change to your hosted backend URL after deploying
 const $ = s => document.querySelector(s);
 const screens = {home:$('#home'), report:$('#report'), match:$('#match')};
 let mode = 'lost', history = ['home'];
