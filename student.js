@@ -1,7 +1,8 @@
 const API_URL = 'https://findly-ai-v6k7.onrender.com'; // change to your hosted backend URL after deploying
 const $ = s => document.querySelector(s);
-const screens = {home:$('#home'), report:$('#report'), match:$('#match')};
+const screens = {home:$('#home'), report:$('#report'), match:$('#match'), notifs:$('#notifs')};
 let mode = 'lost', history = ['home'];
+let notifs = [];
 
 /* Guard: only signed-in students can see this page */
 (async () => {
@@ -11,6 +12,7 @@ let mode = 'lost', history = ['home'];
   const name = md.full_name || md.name || user.email || 'QCUian';
   $('#who').textContent = name.split(' ')[0];
   document.querySelector('.app').hidden = false;
+  loadNotifs(user);
   const intent = sessionStorage.getItem('findly_intent');
   if (intent) { sessionStorage.removeItem('findly_intent'); go(intent); }
 })();
@@ -43,8 +45,11 @@ document.addEventListener('click', e => {
   const t = e.target.closest('[data-go]'); if (t) go(t.dataset.go);
 });
 $('#back').onclick = () => { history.pop(); show(history[history.length-1] || 'home'); };
-$('#bell').onclick = () => { if (!$('#notif').hidden) go('match'); else toast('No new notifications'); };
-
+$('#bell').onclick = () => {
+  if (notifs.length) go('notifs');
+  else if (!$('#notif').hidden) go('match');
+  else toast('No new notifications');
+};
 /* photo preview */
 $('#photo').onchange = e => {
   const file = e.target.files[0]; if (!file) return;
@@ -111,11 +116,12 @@ $('#reportForm').addEventListener('submit', async e => {
   const sb = FindlyAuth.client;
   const file = $('#photo').files[0];
   const path = `${user.id}/${Date.now()}-${file.name.replace(/[^\w.-]/g, '_')}`;
+  let claimId;
   $('#submitBtn').disabled = true;
   try {
     const up = await sb.storage.from('item-images').upload(path, file);
     if (up.error) { console.error(up.error); return toast('Photo upload failed: ' + up.error.message); }
-    const { error } = await sb.from(mode === 'found' ? 'found_items' : 'claim_items').insert({
+    const { data: row, error } = await sb.from(mode === 'found' ? 'found_items' : 'claim_items').insert({
       photo_url: sb.storage.from('item-images').getPublicUrl(path).data.publicUrl,
       item_name: fd.get('item').trim(),
       category: fd.get('category') || null,
@@ -125,8 +131,11 @@ $('#reportForm').addEventListener('submit', async e => {
       marks: fd.get('marks') || null,
       description: fd.get('desc') || null,
       place: fd.get('place').trim(),
-      occurred_at: occurredAt.toISOString()
-    });
+      occurred_at: occurredAt.toISOString(),
+      user_id: user.id,
+      submitted_by: (user.user_metadata?.full_name || user.user_metadata?.name || user.email)
+    }).select('id').single();
+    claimId = row?.id;
     if (error) { console.error(error); return toast('Could not save: ' + error.message); }
   } catch (err) {
     console.error(err);
@@ -139,12 +148,30 @@ $('#reportForm').addEventListener('submit', async e => {
     toast('Found item submitted. Please bring it to the Admin.');
     e.target.reset(); $('#preview').style.display = 'none'; history = ['home']; show('home');
   } else {
-    $('#mName').textContent = fd.get('item');
-    $('#mCat').textContent = fd.get('category') || '—';
-    $('#mDesc').textContent = [fd.get('color'), fd.get('brand'), fd.get('marks')].filter(Boolean).join(', ') || '—';
-    $('#mLoc').textContent = fd.get('place');
-    $('#mWhen').textContent = stamp;
-    $('#matchImg').style.display = 'block';
+    let m = null;
+    try {
+      const { data: { session } } = await sb.auth.getSession();
+      const r = await fetch(`${API_URL}/match`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
+        body: JSON.stringify({ claim_id: claimId })
+      });
+      const j = await r.json();
+      if (r.ok) m = j.match;
+    } catch (err) { console.error('match error:', err); }
+    if (!m) {
+      toast("No match yet. We'll notify you when it's found.");
+      e.target.reset(); $('#preview').style.display = 'none';
+      history = ['home']; show('home'); return;
+    }
+    $('#mName').textContent = m.item_name;
+    $('#mCat').textContent = m.category || '—';
+    $('#mDesc').textContent = [m.color, m.brand, m.marks].filter(Boolean).join(', ') || '—';
+    $('#mLoc').textContent = m.place;
+    $('#mWhen').textContent = new Date(m.occurred_at).toLocaleString('en-US');
+    $('#matchImg').src = m.photo_url; $('#matchImg').style.display = 'block';
+    $('#pct').textContent = `${m.score}% Match`;
+    $('#notifPct').textContent = `${m.score}% match`;
     $('#notif').hidden = false;
     go('match');
   }
@@ -152,4 +179,44 @@ $('#reportForm').addEventListener('submit', async e => {
 $('#claimBtn').onclick = () => { toast('Claim submitted. The admin will verify ownership.'); history = ['home']; show('home'); };
 
 let tt; function toast(m){ const t = $('#toast'); t.textContent = m; t.hidden = false; clearTimeout(tt); tt = setTimeout(() => t.hidden = true, 3200); }
+
+/* progress notifications */
+async function loadNotifs(user){
+  const sb = FindlyAuth.client;
+  const [f, c] = await Promise.all([
+    sb.from('found_items').select('id,item_name').eq('user_id', user.id).eq('status','claimed').eq('notified', false),
+    sb.from('claim_items').select('id,item_name').eq('user_id', user.id).eq('status','found')
+  ]);
+  notifs = [
+    ...(c.data || []).map(r => ({table:'claim_items', id:r.id, msg:`Your missing item (${r.item_name}) has been found. Please claim it at the Admin.`})),
+    ...(f.data || []).map(r => ({table:'found_items', id:r.id, msg:`Your found item (${r.item_name}) has been claimed by its owner. Thank you!`}))
+  ];
+
+  const list = $('#notifList'); list.innerHTML = '';
+  if (!notifs.length) list.textContent = 'No notifications.';
+  notifs.forEach(n => {
+    const d = document.createElement('div'); d.className = 'notif';
+    d.innerHTML = '<div class="thumb"></div><p><b>NOTIFICATION</b></p>';
+    d.querySelector('p').append(n.msg);
+    if (n.table === 'found_items') {
+      const b = document.createElement('button'); b.type = 'button'; b.textContent = 'OK';
+      b.onclick = async () => {
+        await sb.from('found_items').update({notified:true}).eq('id', n.id);
+        loadNotifs(user);
+      };
+      d.append(b);
+    }
+    list.append(d);
+  });
+
+  const banner = $('#notifBanner'); banner.innerHTML = '';
+  if (notifs.length) {
+    const d = document.createElement('div'); d.className = 'notif';
+    d.innerHTML = '<div class="thumb"></div><p><b>NOTIFICATION</b></p>';
+    d.querySelector('p').append(notifs[0].msg + (notifs.length > 1 ? ` (+${notifs.length - 1} more)` : ''));
+    const b = document.createElement('button'); b.type = 'button'; b.textContent = 'View';
+    b.onclick = () => go('notifs');
+    d.append(b); banner.append(d);
+  }
+}
 setupReport();

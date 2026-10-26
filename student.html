@@ -30,9 +30,10 @@
       </div>
       <div class="notif" id="notif" hidden>
         <div class="thumb"></div>
-        <p><b>NOTIFICATION</b>Possible match for your missing item<br /><small id="notifPct">87% match</small></p>
+        <p><b>NOTIFICATION</b>Possible match for your missing item<br /></p>
         <button type="button" data-go="match">View</button>
       </div>
+      <div id="notifBanner"></div>
     </section>
 
     <!-- FOUND + LOST (same form, two modes) -->
@@ -70,7 +71,7 @@
 
     <!-- SUGGESTED MATCH -->
     <section class="screen" id="match" data-title="Suggested Match">
-      <div class="match-img"><img id="matchImg" alt="Suggested item" /><span class="pct" id="pct">87% Match</span></div>
+      <div class="match-img"><img id="matchImg" alt="Suggested item" /></div>
       <dl class="details" style="margin-bottom:0">
         <div><dt>Item name</dt><dd id="mName">Black umbrella</dd></div>
         <div><dt>Category</dt><dd id="mCat">Accessories</dd></div>
@@ -80,6 +81,11 @@
       </dl>
       <p class="note">The owner and the percentage match were notified. Submit a claim so the admin can verify ownership.</p>
       <button class="btn btn-pill" type="button" id="claimBtn">Submit Claim</button>
+    </section>
+
+    <!-- NOTIFICATIONS -->
+    <section class="screen" id="notifs" data-title="Notifications">
+      <div id="notifList"></div>
     </section>
   </main>
 </div>
