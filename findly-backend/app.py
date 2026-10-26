@@ -85,10 +85,32 @@ def match():
         s = score(claim, best) if best else 0
         if not best or s < THRESHOLD:
             return jsonify(match=None)
+        row = sb.table("match_items").upsert(
+            {"claim_item_id": claim_id, "found_item_id": best["id"], "score": s},
+            on_conflict="claim_item_id,found_item_id"
+        ).execute().data[0]
         keys = ("item_name", "category", "color", "brand", "marks", "place", "occurred_at", "photo_url")
-        return jsonify(match={**{k: best.get(k) for k in keys}, "score": s})
+        return jsonify(match={**{k: best.get(k) for k in keys}, "score": s, "match_id": row["id"]})
     except Exception as e:
         print("match error:", e)
+        return jsonify(error=str(e)), 500
+
+@app.post("/claim")
+def claim():
+    token = request.headers.get("Authorization", "").replace("Bearer ", "")
+    match_id = (request.get_json(silent=True) or {}).get("match_id")
+    if not token or not match_id:
+        return jsonify(error="Missing data"), 400
+    try:
+        user = sb.auth.get_user(token).user
+        m = sb.table("match_items").select("claim_item_id").eq("id", match_id).single().execute().data
+        owner = sb.table("claim_items").select("user_id").eq("id", m["claim_item_id"]).single().execute().data
+        if owner["user_id"] != user.id:
+            return jsonify(error="Not your match"), 403
+        sb.table("match_items").update({"status": "claimed"}).eq("id", match_id).execute()
+        return jsonify(ok=True)
+    except Exception as e:
+        print("claim error:", e)
         return jsonify(error=str(e)), 500
 # ---- END ADDED ----
 

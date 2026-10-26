@@ -30,8 +30,7 @@
       </div>
       <div class="notif" id="notif" hidden>
         <div class="thumb"></div>
-        <p><b>NOTIFICATION</b>Possible match for your missing item<br /></p>
-        <button type="button" data-go="match">View</button>
+<p><b>NOTIFICATION</b>Possible match for your missing item<br /><small id="notifPct"></small></p>        <button type="button" data-go="match">View</button>
       </div>
       <div id="notifBanner"></div>
     </section>
@@ -71,8 +70,7 @@
 
     <!-- SUGGESTED MATCH -->
     <section class="screen" id="match" data-title="Suggested Match">
-      <div class="match-img"><img id="matchImg" alt="Suggested item" /></div>
-      <dl class="details" style="margin-bottom:0">
+<div class="match-img"><img id="matchImg" alt="Suggested item" /><span class="pct" id="pct"></span></div>      <dl class="details" style="margin-bottom:0">
         <div><dt>Item name</dt><dd id="mName">Black umbrella</dd></div>
         <div><dt>Category</dt><dd id="mCat">Accessories</dd></div>
         <div><dt>Description</dt><dd id="mDesc">[Color, brand, marks]</dd></div>

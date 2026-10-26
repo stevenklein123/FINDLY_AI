@@ -98,6 +98,19 @@ $('#photo').addEventListener('change', analyzePhoto);
 $('#nowBtn').onclick = () => { $('#nowBtn').classList.add('on'); $('#timeBtn').classList.remove('on'); $('#time').disabled = true; };
 $('#timeBtn').onclick = () => { $('#timeBtn').classList.add('on'); $('#nowBtn').classList.remove('on'); $('#time').disabled = false; $('#time').focus(); };
 
+/* match screen */
+let currentMatchId = null;
+function fillMatch(m){
+  $('#mName').textContent = m.item_name;
+  $('#mCat').textContent = m.category || '—';
+  $('#mDesc').textContent = [m.color, m.brand, m.marks].filter(Boolean).join(', ') || '—';
+  $('#mLoc').textContent = m.place;
+  $('#mWhen').textContent = new Date(m.occurred_at).toLocaleString('en-US');
+  $('#matchImg').src = m.photo_url; $('#matchImg').style.display = 'block';
+  $('#pct').textContent = `${m.score}% Match`;
+  $('#notifPct').textContent = `${m.score}% match`;
+}
+
 $('#reportForm').addEventListener('submit', async e => {
   e.preventDefault();
   const fd = new FormData(e.target);
@@ -164,31 +177,44 @@ $('#reportForm').addEventListener('submit', async e => {
       e.target.reset(); $('#preview').style.display = 'none';
       history = ['home']; show('home'); return;
     }
-    $('#mName').textContent = m.item_name;
-    $('#mCat').textContent = m.category || '—';
-    $('#mDesc').textContent = [m.color, m.brand, m.marks].filter(Boolean).join(', ') || '—';
-    $('#mLoc').textContent = m.place;
-    $('#mWhen').textContent = new Date(m.occurred_at).toLocaleString('en-US');
-    $('#matchImg').src = m.photo_url; $('#matchImg').style.display = 'block';
-    $('#pct').textContent = `${m.score}% Match`;
-    $('#notifPct').textContent = `${m.score}% match`;
-    $('#notif').hidden = false;
+    currentMatchId = m.match_id;
+    fillMatch(m);
+    loadNotifs(user);
     go('match');
   }
 });
-$('#claimBtn').onclick = () => { toast('Claim submitted. The admin will verify ownership.'); history = ['home']; show('home'); };
+$('#claimBtn').onclick = async () => {
+  try {
+    const { data: { session } } = await FindlyAuth.client.auth.getSession();
+    const r = await fetch(`${API_URL}/claim`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
+      body: JSON.stringify({ match_id: currentMatchId })
+    });
+    if (!r.ok) throw new Error('claim failed');
+  } catch (err) { console.error(err); return toast('Could not submit the claim. Try again.'); }
+  toast('Claim submitted. The admin will verify ownership.');
+  history = ['home']; show('home');
+  loadNotifs(await FindlyAuth.getUser());
+};
 
 let tt; function toast(m){ const t = $('#toast'); t.textContent = m; t.hidden = false; clearTimeout(tt); tt = setTimeout(() => t.hidden = true, 3200); }
 
 /* progress notifications */
+function openNotif(n){
+  if (n.m) { currentMatchId = n.id; fillMatch(n.m); go('match'); }
+  else go('notifs');
+}
 async function loadNotifs(user){
   const sb = FindlyAuth.client;
-  const [f, c] = await Promise.all([
+  const [f, c, mt] = await Promise.all([
     sb.from('found_items').select('id,item_name').eq('user_id', user.id).eq('status','claimed').eq('notified', false),
-    sb.from('claim_items').select('id,item_name').eq('user_id', user.id).eq('status','found')
+    sb.from('claim_items').select('id,item_name').eq('user_id', user.id).eq('status','found'),
+    sb.from('match_items').select('id,score,found_items!inner(item_name,category,color,brand,marks,place,occurred_at,photo_url,status)').eq('status','suggested')
   ]);
   notifs = [
     ...(c.data || []).map(r => ({table:'claim_items', id:r.id, msg:`Your missing item (${r.item_name}) has been found. Please claim it at the Admin.`})),
+    ...(mt.data || []).filter(r => r.found_items?.status !== 'claimed').map(r => ({table:'match_items', id:r.id, m:{...r.found_items, score:r.score}, msg:`Possible match for your missing item (${r.score}% match)`})),
     ...(f.data || []).map(r => ({table:'found_items', id:r.id, msg:`Your found item (${r.item_name}) has been claimed by its owner. Thank you!`}))
   ];
 
@@ -198,6 +224,11 @@ async function loadNotifs(user){
     const d = document.createElement('div'); d.className = 'notif';
     d.innerHTML = '<div class="thumb"></div><p><b>NOTIFICATION</b></p>';
     d.querySelector('p').append(n.msg);
+    if (n.table === 'match_items') {
+      const b = document.createElement('button'); b.type = 'button'; b.textContent = 'View';
+      b.onclick = () => openNotif(n);
+      d.append(b);
+    }
     if (n.table === 'found_items') {
       const b = document.createElement('button'); b.type = 'button'; b.textContent = 'OK';
       b.onclick = async () => {
@@ -215,7 +246,7 @@ async function loadNotifs(user){
     d.innerHTML = '<div class="thumb"></div><p><b>NOTIFICATION</b></p>';
     d.querySelector('p').append(notifs[0].msg + (notifs.length > 1 ? ` (+${notifs.length - 1} more)` : ''));
     const b = document.createElement('button'); b.type = 'button'; b.textContent = 'View';
-    b.onclick = () => go('notifs');
+    b.onclick = () => openNotif(notifs[0]);
     d.append(b); banner.append(d);
   }
 }
