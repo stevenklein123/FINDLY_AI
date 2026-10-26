@@ -107,7 +107,8 @@ def claim():
         owner = sb.table("claim_items").select("user_id").eq("id", m["claim_item_id"]).single().execute().data
         if owner["user_id"] != user.id:
             return jsonify(error="Not your match"), 403
-        sb.table("match_items").update({"status": "pending"}).eq("id", match_id).execute()        return jsonify(ok=True)
+        sb.table("match_items").update({"status": "pending"}).eq("id", match_id).execute()
+        return jsonify(ok=True)
     except Exception as e:
         print("claim error:", e)
         return jsonify(error=str(e)), 500
