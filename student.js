@@ -100,7 +100,7 @@ $('#timeBtn').onclick = () => { $('#timeBtn').classList.add('on'); $('#nowBtn').
 
 /* match screen */
 let currentMatchId = null;
-function fillMatch(m){
+function fillMatch(m, pending = false){
   $('#mName').textContent = m.item_name;
   $('#mCat').textContent = m.category || '—';
   $('#mDesc').textContent = [m.color, m.brand, m.marks].filter(Boolean).join(', ') || '—';
@@ -109,6 +109,8 @@ function fillMatch(m){
   $('#matchImg').src = m.photo_url; $('#matchImg').style.display = 'block';
   $('#pct').textContent = `${m.score}% Match`;
   $('#notifPct').textContent = `${m.score}% match`;
+  $('#claimBtn').disabled = pending;
+  $('#claimBtn').textContent = pending ? 'Claim Submitted' : 'Submit Claim';
 }
 
 $('#reportForm').addEventListener('submit', async e => {
@@ -202,7 +204,7 @@ let tt; function toast(m){ const t = $('#toast'); t.textContent = m; t.hidden = 
 
 /* progress notifications */
 function openNotif(n){
-  if (n.m) { currentMatchId = n.id; fillMatch(n.m); go('match'); }
+  if (n.m) { currentMatchId = n.id; fillMatch(n.m, n.pending); go('match'); }
   else go('notifs');
 }
 async function loadNotifs(user){
@@ -210,11 +212,11 @@ async function loadNotifs(user){
   const [f, c, mt] = await Promise.all([
     sb.from('found_items').select('id,item_name').eq('user_id', user.id).eq('status','claimed').eq('notified', false),
     sb.from('claim_items').select('id,item_name').eq('user_id', user.id).eq('status','found'),
-    sb.from('match_items').select('id,score,found_items!inner(item_name,category,color,brand,marks,place,occurred_at,photo_url,status)').eq('status','suggested')
+    sb.from('match_items').select('id,score,status,found_items!inner(item_name,category,color,brand,marks,place,occurred_at,photo_url,status)').in('status',['suggested','pending'])
   ]);
   notifs = [
     ...(c.data || []).map(r => ({table:'claim_items', id:r.id, msg:`Your missing item (${r.item_name}) has been found. Please claim it at the Admin.`})),
-    ...(mt.data || []).filter(r => r.found_items?.status !== 'claimed').map(r => ({table:'match_items', id:r.id, m:{...r.found_items, score:r.score}, msg:`Possible match for your missing item (${r.score}% match)`})),
+    ...(mt.data || []).filter(r => r.found_items?.status !== 'claimed').map(r => ({table:'match_items', id:r.id, pending:r.status === 'pending', m:{...r.found_items, score:r.score}, msg: r.status === 'pending' ? 'Claim submitted. Waiting for the admin to verify your claim.' : `Possible match for your missing item (${r.score}% match)`})),
     ...(f.data || []).map(r => ({table:'found_items', id:r.id, msg:`Your found item (${r.item_name}) has been claimed by its owner. Thank you!`}))
   ];
 
