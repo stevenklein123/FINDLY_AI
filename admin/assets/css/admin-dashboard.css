@@ -1,0 +1,104 @@
+/* =========================================================
+   Admin Dashboard styles
+   ========================================================= */
+
+body {
+  background: url("../assets/background2.jpg") center / cover no-repeat fixed;
+}
+
+/* ---------- Header ---------- */
+.admin-nav {
+  width: 100%;
+  max-width: 64rem;
+  padding: 0.75rem 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border: 1px solid rgb(147 197 253 / 0.6);
+  border-radius: 9999px;
+  background: linear-gradient(to right, #dbeafe, #eff6ff, #e0e7ff);
+  box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1);
+  backdrop-filter: blur(12px);
+}
+
+.nav-logo {
+  width: 3rem;
+  height: 3rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border: 1px solid #93c5fd;
+  border-radius: 9999px;
+  background: rgb(255 255 255 / 0.8);
+  box-shadow: inset 0 2px 4px rgb(0 0 0 / 0.06);
+}
+
+.nav-avatar {
+  width: 3rem;
+  height: 3rem;
+  overflow: hidden;
+  border: 2px solid #fff;
+  border-radius: 9999px;
+  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+}
+
+/* ---------- Stat cards ---------- */
+.stat-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.5rem;
+  border: 2px solid rgb(34 211 238 / 0.5);
+  border-radius: 1rem;
+  background: rgb(17 22 51 / 0.95);
+  box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.2);
+  backdrop-filter: blur(4px);
+}
+
+.stat-label {
+  color: #cbd5e1;
+  font-size: 1.125rem;
+  font-weight: 500;
+  letter-spacing: 0.025em;
+}
+
+.stat-value {
+  margin-top: 0.25rem;
+  min-height: 3rem;
+  color: #22d3ee;
+  font-size: 3rem;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -0.025em;
+  font-variant-numeric: tabular-nums;
+}
+
+.stat-value.is-loading {
+  opacity: 0.4;
+}
+
+/* cards are links to the list pages */
+a.stat-card {
+  color: inherit;
+  text-decoration: none;
+  transition:
+    transform 0.15s ease,
+    border-color 0.15s ease;
+}
+
+a.stat-card:hover {
+  transform: translateY(-2px);
+  border-color: rgb(34 211 238);
+}
+
+a.stat-card:focus-visible {
+  outline: 3px solid #fff;
+  outline-offset: 3px;
+}
+
+.stat-icon {
+  width: 3.5rem;
+  height: 3.5rem;
+  flex-shrink: 0;
+}

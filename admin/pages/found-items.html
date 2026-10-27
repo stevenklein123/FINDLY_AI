@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Found Items</title>
+    <link rel="icon" type="image/png" href="../assets/eye.png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;500;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../assets/css/global.css" />
+  </head>
+  <body>
+    <main class="page">
+      <a class="back" href="./admin-dashboard.html">&larr; Dashboard</a>
+
+      <header class="page-header">
+        <h1>Found Items</h1>
+        <svg
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="#fbbf24"
+          stroke-width="1.8"
+          stroke-linecap="round"
+          aria-hidden="true"
+        >
+          <path d="M9 18h6"></path>
+          <path d="M10 22h4"></path>
+          <path
+            d="M12 2a7 7 0 0 0-7 7c0 2.38 1.19 4.47 3 5.74V17a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1v-2.26c1.81-1.27 3-3.36 3-5.74a7 7 0 0 0-7-7z"
+          ></path>
+        </svg>
+      </header>
+
+      <select id="category" class="category" aria-label="Filter by category">
+        <option value="">Category</option>
+      </select>
+
+      <div id="list" class="list list--panel" aria-live="polite"></div>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+    <script src="../../config.js"></script>
+    <script type="module" src="../assets/script/found-items.js"></script>
+  </body>
+</html>
