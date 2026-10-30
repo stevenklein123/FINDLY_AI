@@ -1,1 +1,11 @@
-config.js
+/config.js
+!admin-frontend/config.js
+
+# Environment variables and secrets
+.env
+.env.*
+!.env.example
+
+# Python cache
+__pycache__/
+*.pyc

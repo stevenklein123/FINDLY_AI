@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Claimed Items</title>
+    <link rel="icon" type="image/png" href="../assets/eye.png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;500;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../assets/css/global.css" />
+  </head>
+  <body>
+    <main class="page">
+      <a class="back" href="./admin-dashboard.html">&larr; Dashboard</a>
+
+      <header class="page-header">
+        <h1>Claimed Items</h1>
+        <svg
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="#22c55e"
+          stroke-width="2.2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          aria-hidden="true"
+        >
+          <circle cx="12" cy="12" r="10"></circle>
+          <path d="M9 12l2 2 4-4"></path>
+        </svg>
+      </header>
+
+      <div id="list" class="list" aria-live="polite"></div>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+    <script src="../config.js"></script>
+    <script type="module" src="../assets/script/claimed-item.js"></script>
+  </body>
+</html>

@@ -2,13 +2,13 @@
 Admin backend for the Lost & Found system (separate from app.py).
 
 Run:      python admin-app.py      -> http://127.0.0.1:5001
-Install:  pip install flask flask-cors python-dotenv supabase
+Install:  pip install -r requirements.txt
 
 .env needs:
     SUPABASE_URL=...
     SUPABASE_SERVICE_KEY=...        (service_role key, NEVER put this in HTML)
-    ADMIN_EMAILS=admin@school.edu   (comma-separated; empty = any logged-in user, dev only)
-    FRONTEND_URL=http://127.0.0.1:5500   (optional, comma-separated)
+    ADMIN_EMAILS=admin@school.edu   (comma-separated; required for admin authorization)
+    FRONTEND_URL=https://your-admin.netlify.app,http://127.0.0.1:5500
 """
 import os
 from flask import Flask, request, jsonify
@@ -20,7 +20,24 @@ load_dotenv()
 app = Flask(__name__)
 
 # ---- CORS ----
-CORS(app, resources={r"/*": {"origins": "*"}})
+# Configure allowed frontend origins from FRONTEND_URL without wildcard fallback in production
+allowed_origins = [
+    url.strip().rstrip("/")
+    for url in os.environ.get("FRONTEND_URL", "").split(",")
+    if url.strip()
+]
+
+# If FRONTEND_URL is not provided, allow localhost for development
+if not allowed_origins:
+    allowed_origins = ["http://127.0.0.1:5500", "http://localhost:5500", "http://127.0.0.1:5001"]
+
+CORS(
+    app,
+    resources={r"/*": {"origins": allowed_origins}},
+    supports_credentials=True,
+    allow_headers=["Authorization", "Content-Type"],
+    methods=["GET", "POST", "OPTIONS"],
+)
 
 # ---- Supabase (service key: bypasses RLS, so we check admin ourselves) ----
 sb = create_client(os.environ["SUPABASE_URL"], os.environ["SUPABASE_SERVICE_KEY"])
@@ -31,7 +48,7 @@ ADMIN_EMAILS = {
     if e.strip()
 }
 if not ADMIN_EMAILS:
-    print("WARNING: ADMIN_EMAILS is empty, any logged-in user can use /admin routes")
+    print("CRITICAL: ADMIN_EMAILS is empty. All admin API routes will be denied.")
 
 # kind -> (table, filters). Keys match the data-stat names in the dashboard.
 LISTS = {
@@ -43,17 +60,28 @@ LISTS = {
 
 
 def require_admin():
-    token = request.headers.get("Authorization", "").replace("Bearer ", "")
+    """Validates Supabase JWT and ensures user email is in the ADMIN_EMAILS allowlist."""
+    if not ADMIN_EMAILS:
+        # Deny all access if allowlist is missing or empty
+        return None
+
+    auth_header = request.headers.get("Authorization", "")
+    token = auth_header.replace("Bearer ", "").strip()
     if not token:
         return None
+
     try:
         user = sb.auth.get_user(token).user
     except Exception:
         return None
+
     if not user:
         return None
-    if ADMIN_EMAILS and (user.email or "").lower() not in ADMIN_EMAILS:
+
+    user_email = (user.email or "").strip().lower()
+    if user_email not in ADMIN_EMAILS:
         return None
+
     return user
 
 
@@ -130,4 +158,6 @@ def admin_mark_claimed(match_id):
 
 
 if __name__ == "__main__":
-    app.run(port=5001, debug=True)
+    port = int(os.environ.get("PORT", 5001))
+    debug = os.environ.get("FLASK_ENV") == "development" or os.environ.get("FLASK_DEBUG") == "1"
+    app.run(host="0.0.0.0", port=port, debug=debug)

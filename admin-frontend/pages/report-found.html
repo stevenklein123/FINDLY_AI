@@ -1,0 +1,199 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Report Found Item | Findly AI</title>
+
+    <link rel="stylesheet" href="../assets/css/report-found.css" />
+
+    <!-- Supabase client -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  </head>
+  <body>
+    <header class="navbar">
+      <a href="#" class="brand">
+        <span class="brand-icon">F</span>
+        <span>Findly<span class="brand-highlight">AI</span></span>
+      </a>
+
+      <a href="./admin-dashboard.html" class="back-link">← Back</a>
+    </header>
+
+    <main class="page">
+      <div class="page-heading">
+        <span class="eyebrow">QCU LOST AND FOUND</span>
+        <h1>Report Found Item</h1>
+        <p>
+          Found something on campus? Submit its details so the administrator can
+          verify and manage the item.
+        </p>
+      </div>
+
+      <form id="foundForm" class="report-card">
+        <div class="photo-section">
+          <h2>Item Photo <span class="required">*</span></h2>
+          <p class="helper">Upload a clear photo of the item you found.</p>
+
+          <label for="photo" class="upload-box" id="uploadBox">
+            <img id="preview" alt="Item photo preview" hidden />
+
+            <div id="uploadPrompt">
+              <span class="upload-icon">+</span>
+              <strong>Click to upload a photo</strong>
+              <span>PNG, JPG, or WEBP</span>
+            </div>
+          </label>
+
+          <input
+            type="file"
+            id="photo"
+            name="photo"
+            accept="image/png,image/jpeg,image/webp"
+            hidden
+            required
+          />
+
+          <button type="button" id="removePhoto" class="remove-photo" hidden>
+            Remove photo
+          </button>
+        </div>
+
+        <div class="form-section">
+          <h2>Item Information</h2>
+
+          <div class="field">
+            <label for="item">Item Name <span class="required">*</span></label>
+            <input
+              type="text"
+              id="item"
+              name="item"
+              placeholder="e.g. Black wallet"
+              maxlength="120"
+              required
+            />
+          </div>
+
+          <div class="form-row">
+            <div class="field">
+              <label for="category"
+                >Category <span class="required">*</span></label
+              >
+              <select id="category" name="category" required>
+                <option value="">Select category</option>
+                <option value="Electronics">Electronics</option>
+                <option value="Wallet">Wallet</option>
+                <option value="ID">ID / Identification</option>
+                <option value="Bag">Bag</option>
+                <option value="Clothing">Clothing</option>
+                <option value="School Supplies">School Supplies</option>
+                <option value="Accessories">Accessories</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+
+            <div class="field">
+              <label for="color">Color</label>
+              <input
+                type="text"
+                id="color"
+                name="color"
+                placeholder="e.g. Black"
+                maxlength="60"
+              />
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="field">
+              <label for="brand">Brand</label>
+              <input
+                type="text"
+                id="brand"
+                name="brand"
+                placeholder="e.g. Samsung"
+                maxlength="100"
+              />
+            </div>
+
+            <div class="field">
+              <label for="size">Size</label>
+              <input
+                type="text"
+                id="size"
+                name="size"
+                placeholder="e.g. Small"
+                maxlength="60"
+              />
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="marks">Distinctive Marks</label>
+            <input
+              type="text"
+              id="marks"
+              name="marks"
+              placeholder="e.g. Sticker on the back"
+              maxlength="255"
+            />
+          </div>
+
+          <div class="field">
+            <label for="description">Additional Description</label>
+            <textarea
+              id="description"
+              name="description"
+              rows="3"
+              maxlength="1000"
+              placeholder="Describe other details that may help identify the item."
+            ></textarea>
+          </div>
+
+          <div class="field">
+            <label for="place"
+              >Where did you find it? <span class="required">*</span></label
+            >
+            <input
+              type="text"
+              id="place"
+              name="place"
+              placeholder="e.g. QCU Library, 2nd floor"
+              maxlength="255"
+              required
+            />
+          </div>
+
+          <div class="field">
+            <label for="foundAt"
+              >Date and Time Found <span class="required">*</span></label
+            >
+            <input type="datetime-local" id="foundAt" name="foundAt" required />
+            <button type="button" id="useCurrentTime" class="time-link">
+              Use current date and time
+            </button>
+          </div>
+
+          <div class="notice">
+            <span class="notice-icon">ⓘ</span>
+            <p>
+              Please surrender the found item to the authorized QCU Security
+              Office or follow the school's official lost-and-found procedure.
+            </p>
+          </div>
+
+          <button type="submit" id="submitBtn" class="submit-btn">
+            Submit Found Item
+          </button>
+
+          <p id="formMessage" class="form-message" role="status"></p>
+        </div>
+      </form>
+
+      <p class="footer-note">Findly AI · QCU Lost and Found Platform</p>
+    </main>
+
+    <script src="../config.js"></script>
+    <script src="../assets/script/report-found.js"></script>
+  </body>
+</html>
