@@ -1,4 +1,4 @@
-import { requireAdmin, adminFetch } from "./admin-common.js";
+import { requireAdmin, adminFetch, logoutAdmin } from "./admin-common.js";
 
 const DEFAULT_AVATAR = "../assets/avatar.jpg";
 const FALLBACK_AVATAR =
@@ -51,4 +51,14 @@ async function loadStats() {
   renderProfile(session.user);
   statEls.forEach((el) => el.classList.add("is-loading"));
   await loadStats();
+
+  // Attach logout handler
+  const logoutBtn = $("#adminLogoutBtn");
+  if (logoutBtn) {
+    logoutBtn.addEventListener("click", async () => {
+      logoutBtn.disabled = true;
+      logoutBtn.textContent = "Signing out...";
+      await logoutAdmin();
+    });
+  }
 })();

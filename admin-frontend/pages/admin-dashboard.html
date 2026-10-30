@@ -24,13 +24,22 @@
           Hi, <span id="admin-name">Admin</span>
         </h1>
 
-        <div class="nav-avatar">
-          <img
-            id="admin-avatar"
-            src="../assets/avatar.jpg"
-            alt="Admin avatar"
-            class="w-full h-full object-cover"
-          />
+        <div class="flex items-center gap-3">
+          <div class="nav-avatar">
+            <img
+              id="admin-avatar"
+              src="../assets/avatar.jpg"
+              alt="Admin avatar"
+              class="w-full h-full object-cover"
+            />
+          </div>
+          <button
+            id="adminLogoutBtn"
+            type="button"
+            class="text-xs font-semibold text-red-600 hover:text-red-700 bg-red-50 hover:bg-red-100 border border-red-200 px-3 py-1.5 rounded-full transition-colors"
+          >
+            Logout
+          </button>
         </div>
       </div>
     </nav>
