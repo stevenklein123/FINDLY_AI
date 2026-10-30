@@ -1,26 +1,28 @@
-// Shared logic for the Missing Items and Found Items pages.
-import { supabase } from "./supabase-client.js";
-import { requireAdmin, subscribeToTables } from "./admin-common.js";
+// Shared logic for Missing Items and Found Items list pages.
+import { requireAdmin, adminFetch } from "./admin-common.js";
 import { el, itemCard } from "./item-card.js";
 
 /**
- * @param {{view: string, table: string, kind: "lost"|"found"}} opts
- *   view  - admin view to read from
- *   table - base table to watch for realtime changes
+ * @param {{listKind: "missing_items"|"found_items", kind: "lost"|"found"}} opts
  */
-export async function initItemListPage({ view, table, kind }) {
-  if (!(await requireAdmin())) return;
+export async function initItemListPage({ listKind, kind }) {
+  const session = await requireAdmin();
+  if (!session) return;
 
   const list = document.querySelector("#list");
   const select = document.querySelector("#category");
   let items = [];
 
-  const message = (text, isError = false) =>
-    list.replaceChildren(
-      el("p", { class: `status${isError ? " status--error" : ""}` }, text),
-    );
+  const message = (text, isError = false) => {
+    if (list) {
+      list.replaceChildren(
+        el("p", { class: `status${isError ? " status--error" : ""}` }, text),
+      );
+    }
+  };
 
   function fillCategories() {
+    if (!select) return;
     const current = select.value;
     const categories = [
       ...new Set(items.map((i) => i.category?.trim()).filter(Boolean)),
@@ -34,29 +36,36 @@ export async function initItemListPage({ view, table, kind }) {
   }
 
   function render() {
-    const visible = select.value
+    if (!list) return;
+    const visible = select?.value
       ? items.filter((i) => i.category?.trim() === select.value)
       : items;
 
-    if (!visible.length) return message("No items to show.");
+    if (!visible.length) {
+      return message("No items found.");
+    }
     list.replaceChildren(...visible.map((item) => itemCard(item, kind)));
   }
 
   async function load() {
-    const { data, error } = await supabase
-      .from(view)
-      .select("*")
-      .eq("status", "open")
-      .order("created_at", { ascending: false });
-
-    if (error) return message(`Couldn't load items: ${error.message}`, true);
-    items = data;
-    fillCategories();
-    render();
+    message("Loading items from server…");
+    try {
+      const data = await adminFetch(`/admin/list/${listKind}`);
+      if (!Array.isArray(data)) {
+        return message("Failed to parse items from backend.", true);
+      }
+      items = data;
+      fillCategories();
+      render();
+    } catch (err) {
+      console.error("List load error:", err);
+      message(`Could not load items: ${err.message}`, true);
+    }
   }
 
-  select.addEventListener("change", render);
-  message("Loading…");
+  if (select) {
+    select.addEventListener("change", render);
+  }
+
   await load();
-  subscribeToTables(`${table}-list`, [table], load);
 }

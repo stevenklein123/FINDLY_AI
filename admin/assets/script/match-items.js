@@ -1,13 +1,15 @@
-import { supabase } from "./supabase-client.js";
-import { requireAdmin, subscribeToTables } from "./admin-common.js";
+import { requireAdmin, adminFetch } from "./admin-common.js";
 import { el, itemCard } from "./item-card.js";
 
 const list = document.querySelector("#list");
 
-const message = (text, isError = false) =>
-  list.replaceChildren(
-    el("p", { class: `status${isError ? " status--error" : ""}` }, text),
-  );
+const message = (text, isError = false) => {
+  if (list) {
+    list.replaceChildren(
+      el("p", { class: `status${isError ? " status--error" : ""}` }, text),
+    );
+  }
+};
 
 function scoreBar(score) {
   const pct = Math.max(0, Math.min(100, Math.round(Number(score) || 0)));
@@ -21,59 +23,91 @@ function scoreBar(score) {
       "aria-valuenow": pct,
     },
     el("div", { class: "score__mask", style: `width:${100 - pct}%` }),
-    el("span", { class: "score__label" }, `${pct}%`),
+    el("span", { class: "score__label" }, `Match Score: ${pct}%`),
   );
 }
 
 function matchPanel(match) {
-  const button = el("button", { class: "claim-btn", type: "button" }, "CLAIM");
+  const isClaimed = match.status === "claimed";
+  const lostItem = match.claim_items;
+  const foundItem = match.found_items;
 
-  button.addEventListener("click", async () => {
-    const owner = match.lost.full_name || "the owner";
-    if (!confirm(`Mark "${match.lost.item_name}" as claimed by ${owner}?`))
-      return;
-
-    button.disabled = true;
-    const { error } = await supabase.rpc("claim_match", {
-      p_match_id: match.id,
-    });
-    if (error) {
-      alert(`Couldn't claim: ${error.message}`);
-      button.disabled = false;
-      return;
-    }
-    load();
-  });
-
-  return el(
-    "section",
-    { class: "pair" },
-    itemCard(match.lost, "lost"),
-    itemCard(match.found, "found"),
+  const children = [
+    itemCard(lostItem, "lost"),
+    itemCard(foundItem, "found"),
     scoreBar(match.score),
-    button,
-  );
+  ];
+
+  if (!isClaimed) {
+    const claimBtn = el(
+      "button",
+      { class: "claim-btn", type: "button" },
+      match.status === "pending" ? "Approve Claim" : "Mark as Claimed",
+    );
+
+    claimBtn.addEventListener("click", async () => {
+      const itemName = lostItem?.item_name || foundItem?.item_name || "this item";
+      if (!confirm(`Mark "${itemName}" as CLAIMED in the system?`)) return;
+
+      claimBtn.disabled = true;
+      claimBtn.textContent = "Processing…";
+
+      try {
+        const res = await adminFetch(`/admin/claim/${match.id}`, {
+          method: "POST",
+        });
+        if (res?.ok) {
+          alert("Successfully marked as claimed!");
+          await loadMatches();
+        } else {
+          alert("Failed to mark as claimed.");
+          claimBtn.disabled = false;
+          claimBtn.textContent = "Mark as Claimed";
+        }
+      } catch (err) {
+        console.error("Claim error:", err);
+        alert(`Error: ${err.message}`);
+        claimBtn.disabled = false;
+        claimBtn.textContent = "Mark as Claimed";
+      }
+    });
+
+    children.push(claimBtn);
+  } else {
+    children.push(
+      el(
+        "p",
+        {
+          class: "status",
+          style: "color: #16a34a; font-weight: bold; margin: 0.5rem 0;",
+        },
+        "✓ ALREADY CLAIMED",
+      ),
+    );
+  }
+
+  return el("section", { class: "pair" }, ...children);
 }
 
-async function load() {
-  const { data, error } = await supabase
-    .from("admin_matches")
-    .select("*")
-    .in("status", ["pending", "confirmed"])
-    .order("score", { ascending: false });
-
-  if (error) return message(`Couldn't load matches: ${error.message}`, true);
-  if (!data.length) return message("No matches yet.");
-  list.replaceChildren(...data.map(matchPanel));
+async function loadMatches() {
+  message("Loading matches from server…");
+  try {
+    const data = await adminFetch("/admin/list/match_items");
+    if (!Array.isArray(data)) {
+      return message("Failed to parse matches from backend.", true);
+    }
+    if (!data.length) {
+      return message("No match records found.");
+    }
+    list.replaceChildren(...data.map(matchPanel));
+  } catch (err) {
+    console.error("Match load error:", err);
+    message(`Could not load matches: ${err.message}`, true);
+  }
 }
 
 (async function init() {
-  if (!(await requireAdmin())) return;
-  message("Loading…");
-  await load();
-  subscribeToTables(
-    "matches-page",
-    ["matches", "found_items", "claim_items"],
-    load,
-  );
+  const session = await requireAdmin();
+  if (!session) return;
+  await loadMatches();
 })();

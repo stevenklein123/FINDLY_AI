@@ -1,6 +1,4 @@
-// Tiny DOM helper + the reusable item card.
-// Everything is built with textContent/text nodes, so user-submitted text can't inject HTML.
-
+// Tiny DOM helper + reusable item card for admin pages.
 export function el(tag, props = {}, ...children) {
   const node = document.createElement(tag);
   for (const [key, value] of Object.entries(props)) {
@@ -19,32 +17,47 @@ const PLACEHOLDER =
       '<path d="M30 65l15-18 12 14 8-9 10 13z" fill="#9ca3af"/><circle cx="38" cy="36" r="6" fill="#9ca3af"/></svg>',
   );
 
-const fmtDate = (iso) =>
-  new Date(iso).toLocaleDateString("en-US", {
-    month: "2-digit",
-    day: "2-digit",
-    year: "numeric",
-  });
+const fmtDate = (iso) => {
+  if (!iso) return "";
+  try {
+    return new Date(iso).toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+    });
+  } catch {
+    return String(iso);
+  }
+};
 
-const fmtTime = (iso) =>
-  new Date(iso)
-    .toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })
-    .toLowerCase();
+const fmtTime = (iso) => {
+  if (!iso) return "";
+  try {
+    return new Date(iso).toLocaleTimeString("en-US", {
+      hour: "numeric",
+      minute: "2-digit",
+    });
+  } catch {
+    return "";
+  }
+};
 
 const field = (label, value) =>
-  value ? el("p", {}, el("b", {}, `${label}: `), value) : null;
+  value ? el("p", {}, el("b", {}, `${label}: `), String(value)) : null;
 
 /**
- * @param {object} item  row from admin_found_items / admin_missing_items
+ * @param {object} item  row from claim_items or found_items
  * @param {"lost"|"found"} kind
  */
 export function itemCard(item, kind) {
+  if (!item) return el("div", { class: "card" }, "Item details not found");
+
   const lost = kind === "lost";
 
   const photo = el("img", {
     class: "card__photo",
     src: item.photo_url || PLACEHOLDER,
-    alt: item.item_name,
+    alt: item.item_name || "Item image",
     loading: "lazy",
   });
   photo.addEventListener(
@@ -63,26 +76,23 @@ export function itemCard(item, kind) {
     el(
       "div",
       { class: "card__section" },
-      el("h3", {}, item.item_name),
+      el("h3", {}, item.item_name || "Untitled Item"),
+      field("Category", item.category),
       field("Color", item.color),
-      field("Classification", item.category),
-      field("Details", item.description),
-      field("Additional details", item.marks),
       field("Brand", item.brand),
       field("Size", item.size),
-      field(`Date ${kind}`, fmtDate(item.occurred_at)),
-      field(`Time ${kind}`, fmtTime(item.occurred_at)),
+      field("Marks", item.marks),
+      field("Details", item.description),
     ),
 
     el(
       "div",
       { class: "card__section" },
-      el("h3", {}, item.full_name || "Unknown student"),
-      field("Year & Section", item.year_section),
-      field("Student No", item.student_no),
-      lost ? field("Email", item.email) : null,
-      field("Course", item.course),
-      field(`Where the item was ${kind}`, item.place),
+      field(lost ? "Lost at" : "Found at", item.place),
+      field("Date", fmtDate(item.occurred_at)),
+      field("Time", fmtTime(item.occurred_at)),
+      field("Status", item.status ? item.status.toUpperCase() : "OPEN"),
+      field("Reported by", item.submitted_by),
     ),
   );
 }
