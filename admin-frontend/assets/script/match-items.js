@@ -3,6 +3,7 @@ import { el, itemCard } from "./item-card.js";
 
 const list = document.querySelector("#list");
 const categorySelect = document.querySelector("#category");
+
 const CATEGORIES = [
   "Electronics",
   "Personal Items",
@@ -15,6 +16,7 @@ const CATEGORIES = [
   "Sports Equipment",
   "Other",
 ];
+
 const UNCATEGORIZED = "__uncategorized__";
 let matches = [];
 
@@ -28,6 +30,7 @@ const message = (text, isError = false) => {
 
 function scoreBar(score) {
   const pct = Math.max(0, Math.min(100, Math.round(Number(score) || 0)));
+
   return el(
     "div",
     {
@@ -63,6 +66,7 @@ function matchPanel(match) {
     claimBtn.addEventListener("click", async () => {
       const itemName =
         lostItem?.item_name || foundItem?.item_name || "this item";
+
       if (!confirm(`Mark "${itemName}" as CLAIMED in the system?`)) return;
 
       claimBtn.disabled = true;
@@ -72,6 +76,7 @@ function matchPanel(match) {
         const res = await adminFetch(`/admin/claim/${match.id}`, {
           method: "POST",
         });
+
         if (res?.ok) {
           alert("Successfully marked as claimed!");
           await loadMatches();
@@ -106,17 +111,23 @@ function matchPanel(match) {
 }
 
 function fillCategories() {
+  if (!categorySelect) return;
+
   const items = matches.flatMap((match) => [
     match.claim_items,
     match.found_items,
   ]);
+
   const categories = [
     ...new Set(items.map((item) => item?.category?.trim()).filter(Boolean)),
   ];
+
   const legacyCategories = categories
     .filter((category) => !CATEGORIES.includes(category))
     .sort((a, b) => a.localeCompare(b));
+
   const hasUncategorized = items.some((item) => !item?.category?.trim());
+
   const current = categorySelect.value;
 
   categorySelect.replaceChildren(
@@ -131,6 +142,7 @@ function fillCategories() {
       ? [el("option", { value: UNCATEGORIZED }, "Uncategorized")]
       : []),
   );
+
   categorySelect.value =
     current === UNCATEGORIZED && hasUncategorized
       ? current
@@ -141,13 +153,16 @@ function fillCategories() {
 
 function renderMatches() {
   if (!list) return;
-  const category = categorySelect.value;
+
+  const category = categorySelect?.value || "";
+
   const visible = !category
     ? matches
     : matches.filter((match) => {
         const categories = [match.claim_items, match.found_items].map((item) =>
           item?.category?.trim(),
         );
+
         return category === UNCATEGORIZED
           ? categories.some((value) => !value)
           : categories.includes(category);
@@ -156,16 +171,20 @@ function renderMatches() {
   if (!visible.length) {
     return message("No match records found.");
   }
+
   list.replaceChildren(...visible.map(matchPanel));
 }
 
 async function loadMatches() {
   message("Loading matches from server…");
+
   try {
     const data = await adminFetch("/admin/list/match_items");
+
     if (!Array.isArray(data)) {
       return message("Failed to parse matches from backend.", true);
     }
+
     matches = data;
     fillCategories();
     renderMatches();
@@ -175,10 +194,15 @@ async function loadMatches() {
   }
 }
 
-categorySelect.addEventListener("change", renderMatches);
+// Populate the default categories immediately.
+fillCategories();
+
+categorySelect?.addEventListener("change", renderMatches);
 
 (async function init() {
   const session = await requireAdmin();
+
   if (!session) return;
+
   await loadMatches();
 })();
