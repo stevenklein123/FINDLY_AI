@@ -2,6 +2,21 @@ import { requireAdmin, adminFetch } from "./admin-common.js";
 import { el, itemCard } from "./item-card.js";
 
 const list = document.querySelector("#list");
+const categorySelect = document.querySelector("#category");
+const CATEGORIES = [
+  "Electronics",
+  "Personal Items",
+  "School Supplies",
+  "Clothing & Accessories",
+  "Bags",
+  "Documents & IDs",
+  "Keys",
+  "Water Bottles & Food Containers",
+  "Sports Equipment",
+  "Other",
+];
+const UNCATEGORIZED = "__uncategorized__";
+let matches = [];
 
 const message = (text, isError = false) => {
   if (list) {
@@ -89,6 +104,58 @@ function matchPanel(match) {
   return el("section", { class: "pair" }, ...children);
 }
 
+function fillCategories() {
+  const items = matches.flatMap((match) => [
+    match.claim_items,
+    match.found_items,
+  ]);
+  const categories = [
+    ...new Set(items.map((item) => item?.category?.trim()).filter(Boolean)),
+  ];
+  const legacyCategories = categories
+    .filter((category) => !CATEGORIES.includes(category))
+    .sort((a, b) => a.localeCompare(b));
+  const hasUncategorized = items.some((item) => !item?.category?.trim());
+  const current = categorySelect.value;
+
+  categorySelect.replaceChildren(
+    el("option", { value: "" }, "Category"),
+    ...CATEGORIES.map((category) => el("option", { value: category }, category)),
+    ...legacyCategories.map((category) =>
+      el("option", { value: category }, category),
+    ),
+    ...(hasUncategorized
+      ? [el("option", { value: UNCATEGORIZED }, "Uncategorized")]
+      : []),
+  );
+  categorySelect.value =
+    current === UNCATEGORIZED && hasUncategorized
+      ? current
+      : CATEGORIES.includes(current) || legacyCategories.includes(current)
+        ? current
+        : "";
+}
+
+function renderMatches() {
+  if (!list) return;
+  const category = categorySelect.value;
+  const visible = !category
+    ? matches
+    : matches.filter((match) => {
+        const categories = [match.claim_items, match.found_items].map((item) =>
+          item?.category?.trim(),
+        );
+        return category === UNCATEGORIZED
+          ? categories.some((value) => !value)
+          : categories.includes(category);
+      });
+
+  if (!visible.length) {
+    return message("No match records found.");
+  }
+  list.replaceChildren(...visible.map(matchPanel));
+}
+
 async function loadMatches() {
   message("Loading matches from server…");
   try {
@@ -96,15 +163,16 @@ async function loadMatches() {
     if (!Array.isArray(data)) {
       return message("Failed to parse matches from backend.", true);
     }
-    if (!data.length) {
-      return message("No match records found.");
-    }
-    list.replaceChildren(...data.map(matchPanel));
+    matches = data;
+    fillCategories();
+    renderMatches();
   } catch (err) {
     console.error("Match load error:", err);
     message(`Could not load matches: ${err.message}`, true);
   }
 }
+
+categorySelect.addEventListener("change", renderMatches);
 
 (async function init() {
   const session = await requireAdmin();

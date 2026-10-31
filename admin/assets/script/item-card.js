@@ -77,7 +77,7 @@ export function itemCard(item, kind) {
       "div",
       { class: "card__section" },
       el("h3", {}, item.item_name || "Untitled Item"),
-      field("Category", item.category),
+      field("Category", item.category?.trim() || "Uncategorized"),
       field("Color", item.color),
       field("Brand", item.brand),
       field("Size", item.size),

@@ -2,6 +2,20 @@
 import { requireAdmin, adminFetch } from "./admin-common.js";
 import { el, itemCard } from "./item-card.js";
 
+const CATEGORIES = [
+  "Electronics",
+  "Personal Items",
+  "School Supplies",
+  "Clothing & Accessories",
+  "Bags",
+  "Documents & IDs",
+  "Keys",
+  "Water Bottles & Food Containers",
+  "Sports Equipment",
+  "Other",
+];
+const UNCATEGORIZED = "__uncategorized__";
+
 /**
  * @param {{listKind: "missing_items"|"found_items", kind: "lost"|"found"}} opts
  */
@@ -24,22 +38,41 @@ export async function initItemListPage({ listKind, kind }) {
   function fillCategories() {
     if (!select) return;
     const current = select.value;
-    const categories = [
+    const legacyCategories = [
       ...new Set(items.map((i) => i.category?.trim()).filter(Boolean)),
-    ].sort((a, b) => a.localeCompare(b));
+    ]
+      .filter((category) => !CATEGORIES.includes(category))
+      .sort((a, b) => a.localeCompare(b));
+    const hasUncategorized = items.some((item) => !item.category?.trim());
 
     select.replaceChildren(
       el("option", { value: "" }, "Category"),
-      ...categories.map((c) => el("option", { value: c }, c)),
+      ...CATEGORIES.map((category) =>
+        el("option", { value: category }, category),
+      ),
+      ...legacyCategories.map((category) =>
+        el("option", { value: category }, category),
+      ),
+      ...(hasUncategorized
+        ? [el("option", { value: UNCATEGORIZED }, "Uncategorized")]
+        : []),
     );
-    select.value = categories.includes(current) ? current : "";
+    select.value =
+      current === UNCATEGORIZED && hasUncategorized
+        ? current
+        : CATEGORIES.includes(current) || legacyCategories.includes(current)
+          ? current
+          : "";
   }
 
   function render() {
     if (!list) return;
-    const visible = select?.value
-      ? items.filter((i) => i.category?.trim() === select.value)
-      : items;
+    const category = select?.value;
+    const visible = !category
+      ? items
+      : category === UNCATEGORIZED
+        ? items.filter((item) => !item.category?.trim())
+        : items.filter((item) => item.category?.trim() === category);
 
     if (!visible.length) {
       return message("No items found.");
