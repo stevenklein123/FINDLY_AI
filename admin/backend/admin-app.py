@@ -52,7 +52,7 @@ if not ADMIN_EMAILS:
 
 # kind -> (table, filters). Keys match the data-stat names in the dashboard.
 LISTS = {
-    "missing_items": ("claim_items", {}),
+    "missing_items": ("lost_items", {}),
     "found_items": ("found_items", {}),
     "match_items": ("match_items", {}),
     "claimed": ("match_items", {"status": "claimed"}),
@@ -103,7 +103,7 @@ def admin_summary():
         return jsonify(error="Unauthorized"), 401
     try:
         return jsonify(
-            missing_items=count("claim_items"),
+            missing_items=count("lost_items"),
             found_items=count("found_items"),
             match_items=count("match_items"),
             claimed=count("match_items", status="claimed"),
@@ -121,7 +121,7 @@ def admin_list(kind):
         return jsonify(error="Unknown list"), 404
     table, filters = LISTS[kind]
     try:
-        cols = "*, claim_items(*), found_items(*)" if table == "match_items" else "*"
+        cols = "*, lost_items(*), found_items(*)" if table == "match_items" else "*"
         q = sb.table(table).select(cols).order("created_at", desc=True)
         for k, v in filters.items():
             q = q.eq(k, v)
@@ -150,7 +150,7 @@ def admin_mark_claimed(match_id):
         if m.get("found_item_id"):
             sb.table("found_items").update({"status": "claimed"}).eq("id", m["found_item_id"]).execute()
         if m.get("claim_item_id"):
-            sb.table("claim_items").update({"status": "claimed"}).eq("id", m["claim_item_id"]).execute()
+            sb.table("lost_items").update({"status": "claimed"}).eq("id", m["claim_item_id"]).execute()
         return jsonify(ok=True)
     except Exception as e:
         print("admin claim error:", e)

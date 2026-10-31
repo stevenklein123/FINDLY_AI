@@ -47,7 +47,7 @@ function scoreBar(score) {
 
 function matchPanel(match) {
   const isClaimed = match.status === "claimed";
-  const lostItem = match.claim_items;
+  const lostItem = match.lost_items;
   const foundItem = match.found_items;
 
   const children = [
@@ -114,7 +114,7 @@ function fillCategories() {
   if (!categorySelect) return;
 
   const items = matches.flatMap((match) => [
-    match.claim_items,
+    match.lost_items,
     match.found_items,
   ]);
 
@@ -159,7 +159,7 @@ function renderMatches() {
   const visible = !category
     ? matches
     : matches.filter((match) => {
-        const categories = [match.claim_items, match.found_items].map((item) =>
+        const categories = [match.lost_items, match.found_items].map((item) =>
           item?.category?.trim(),
         );
 

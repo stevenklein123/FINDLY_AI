@@ -21,7 +21,7 @@ function claimedPanel(match) {
   return el(
     "section",
     { class: "pair pair--claimed" },
-    itemCard(match.claim_items, "lost"),
+    itemCard(match.lost_items, "lost"),
     itemCard(match.found_items, "found"),
     badge,
   );

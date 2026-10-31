@@ -38,7 +38,7 @@ function claimedPanel(match) {
   return el(
     "section",
     { class: "pair pair--claimed" },
-    itemCard(match.claim_items, "lost"),
+    itemCard(match.lost_items, "lost"),
     itemCard(match.found_items, "found"),
     badge,
   );
@@ -48,7 +48,7 @@ function fillCategories() {
   if (!categorySelect) return;
 
   const items = claimedItems.flatMap((match) => [
-    match.claim_items,
+    match.lost_items,
     match.found_items,
   ]);
 
@@ -93,7 +93,7 @@ function renderClaimed() {
   const visible = !category
     ? claimedItems
     : claimedItems.filter((match) => {
-        const categories = [match.claim_items, match.found_items].map((item) =>
+        const categories = [match.lost_items, match.found_items].map((item) =>
           item?.category?.trim(),
         );
 

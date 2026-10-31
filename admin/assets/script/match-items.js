@@ -44,7 +44,7 @@ function scoreBar(score) {
 
 function matchPanel(match) {
   const isClaimed = match.status === "claimed";
-  const lostItem = match.claim_items;
+  const lostItem = match.lost_items;
   const foundItem = match.found_items;
 
   const children = [
@@ -61,7 +61,8 @@ function matchPanel(match) {
     );
 
     claimBtn.addEventListener("click", async () => {
-      const itemName = lostItem?.item_name || foundItem?.item_name || "this item";
+      const itemName =
+        lostItem?.item_name || foundItem?.item_name || "this item";
       if (!confirm(`Mark "${itemName}" as CLAIMED in the system?`)) return;
 
       claimBtn.disabled = true;
@@ -106,7 +107,7 @@ function matchPanel(match) {
 
 function fillCategories() {
   const items = matches.flatMap((match) => [
-    match.claim_items,
+    match.lost_items,
     match.found_items,
   ]);
   const categories = [
@@ -120,7 +121,9 @@ function fillCategories() {
 
   categorySelect.replaceChildren(
     el("option", { value: "" }, "Category"),
-    ...CATEGORIES.map((category) => el("option", { value: category }, category)),
+    ...CATEGORIES.map((category) =>
+      el("option", { value: category }, category),
+    ),
     ...legacyCategories.map((category) =>
       el("option", { value: category }, category),
     ),
@@ -142,7 +145,7 @@ function renderMatches() {
   const visible = !category
     ? matches
     : matches.filter((match) => {
-        const categories = [match.claim_items, match.found_items].map((item) =>
+        const categories = [match.lost_items, match.found_items].map((item) =>
           item?.category?.trim(),
         );
         return category === UNCATEGORIZED

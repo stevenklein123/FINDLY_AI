@@ -46,7 +46,9 @@ const field = (label, value) =>
   value ? el("p", {}, el("b", {}, `${label}: `), String(value)) : null;
 
 /**
- * @param {object} item  row from claim_items or found_items
+ *
+ * @param {object} item  row from lost_items or found_items
+ *
  * @param {"lost"|"found"} kind
  */
 export function itemCard(item, kind) {
