@@ -65,8 +65,27 @@ export function redirectToLogin(message) {
 
 /**
  * Signs the admin user out and redirects to the Admin Login page.
+ * Logs the LOGOUT audit event to backend before destroying the session.
  */
 export async function logoutAdmin() {
+  try {
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+
+    if (session?.access_token) {
+      await fetch(`${API_URL}/admin/audit/logout`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+          "Content-Type": "application/json",
+        },
+      });
+    }
+  } catch (err) {
+    console.warn("Failed to record logout audit event:", err);
+  }
+
   await supabase.auth.signOut();
   redirectToLogin();
 }

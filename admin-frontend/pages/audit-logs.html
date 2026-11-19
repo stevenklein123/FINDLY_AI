@@ -1,0 +1,353 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Admin Audit Logs | Findly AI</title>
+    <link rel="icon" type="image/png" href="../assets/eye.png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="../assets/css/admin-dashboard.css" />
+    <link rel="stylesheet" href="../assets/css/global.css" />
+  </head>
+  <body class="min-h-screen flex flex-col justify-between font-sans">
+    <!-- Header -->
+    <header class="w-full px-6 py-6 flex justify-center">
+      <div class="admin-nav w-full max-w-6xl">
+        <div class="flex items-center gap-3">
+          <a
+            href="./admin-dashboard.html"
+            class="nav-logo hover:scale-105 transition-transform"
+            title="Return to Dashboard"
+          >
+            <img
+              src="../assets/eye.png"
+              alt="Eye logo"
+              class="w-8 h-8 object-contain"
+            />
+          </a>
+          <h1 class="text-lg md:text-xl font-bold text-slate-800 tracking-wide">
+            Admin <span class="text-blue-600">Audit Logs</span>
+          </h1>
+        </div>
+
+        <div class="flex items-center gap-3">
+          <a
+            href="./admin-dashboard.html"
+            class="text-xs font-semibold text-slate-600 hover:text-blue-600 bg-white/80 border border-slate-300 px-3 py-1.5 rounded-full transition-colors"
+          >
+            &larr; Dashboard
+          </a>
+          <button
+            id="adminLogoutBtn"
+            type="button"
+            class="text-xs font-semibold text-red-600 hover:text-red-700 bg-red-50 hover:bg-red-100 border border-red-200 px-3 py-1.5 rounded-full transition-colors"
+          >
+            Logout
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="w-full max-w-6xl mx-auto px-4 md:px-6 py-2 mb-auto space-y-6">
+      <!-- Search, Filters, and Export Card -->
+      <section
+        class="bg-white/85 backdrop-blur-md border border-slate-200/80 rounded-2xl p-5 shadow-sm space-y-4"
+      >
+        <div class="flex flex-col md:flex-row gap-3 items-stretch md:items-center justify-between">
+          <!-- Search Box -->
+          <div class="relative flex-1">
+            <svg
+              class="w-4 h-4 absolute left-3.5 top-3.5 text-slate-400"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+              />
+            </svg>
+            <input
+              type="text"
+              id="searchInput"
+              placeholder="Search description, email, or record ID..."
+              class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white/90 text-slate-800"
+            />
+          </div>
+
+          <!-- Export to CSV Button -->
+          <button
+            id="exportCsvBtn"
+            type="button"
+            class="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-sm transition-colors cursor-pointer"
+          >
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+              />
+            </svg>
+            Export to CSV
+          </button>
+        </div>
+
+        <!-- Filter Row -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+          <!-- Administrator Filter -->
+          <div>
+            <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1">
+              Administrator
+            </label>
+            <select
+              id="adminFilter"
+              class="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-slate-800 cursor-pointer"
+            >
+              <option value="">All Administrators</option>
+            </select>
+          </div>
+
+          <!-- Action Filter -->
+          <div>
+            <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1">
+              Action
+            </label>
+            <select
+              id="actionFilter"
+              class="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-slate-800 cursor-pointer"
+            >
+              <option value="">All Actions</option>
+            </select>
+          </div>
+
+          <!-- Module Filter -->
+          <div>
+            <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1">
+              Module
+            </label>
+            <select
+              id="moduleFilter"
+              class="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-slate-800 cursor-pointer"
+            >
+              <option value="">All Modules</option>
+            </select>
+          </div>
+
+          <!-- Start Date -->
+          <div>
+            <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1">
+              Date From
+            </label>
+            <input
+              type="date"
+              id="startDateFilter"
+              class="w-full px-3 py-1.5 rounded-xl border border-slate-300 text-xs focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-slate-800 cursor-pointer"
+            />
+          </div>
+
+          <!-- End Date & Reset -->
+          <div class="flex items-end gap-2">
+            <div class="flex-1">
+              <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1">
+                Date To
+              </label>
+              <input
+                type="date"
+                id="endDateFilter"
+                class="w-full px-3 py-1.5 rounded-xl border border-slate-300 text-xs focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-slate-800 cursor-pointer"
+              />
+            </div>
+            <button
+              id="resetFiltersBtn"
+              type="button"
+              class="px-3 py-2 text-xs font-semibold text-slate-600 hover:text-slate-800 bg-slate-100 hover:bg-slate-200 border border-slate-300 rounded-xl transition-colors cursor-pointer"
+              title="Reset all filters"
+            >
+              Reset
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Logs Table Section -->
+      <section
+        class="bg-white/90 backdrop-blur-md border border-slate-200/80 rounded-2xl shadow-sm overflow-hidden"
+      >
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-xs text-slate-700">
+            <thead class="bg-slate-100/90 text-slate-600 uppercase text-[11px] tracking-wider border-b border-slate-200 font-bold">
+              <tr>
+                <th class="py-3.5 px-4">Timestamp</th>
+                <th class="py-3.5 px-4">Administrator</th>
+                <th class="py-3.5 px-4">Action</th>
+                <th class="py-3.5 px-4">Module</th>
+                <th class="py-3.5 px-4">Description</th>
+                <th class="py-3.5 px-4 text-center">Details</th>
+              </tr>
+            </thead>
+            <tbody id="logsTableBody" class="divide-y divide-slate-100 font-medium">
+              <tr>
+                <td colspan="6" class="py-12 text-center text-slate-400">
+                  <div class="flex flex-col items-center justify-center gap-2">
+                    <svg class="w-6 h-6 animate-spin text-blue-500" fill="none" viewBox="0 0 24 24">
+                      <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                      <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+                    </svg>
+                    <span>Loading audit records...</span>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Pagination Controls -->
+        <div
+          id="paginationContainer"
+          class="flex flex-col sm:flex-row items-center justify-between px-5 py-3.5 bg-slate-50 border-t border-slate-200 text-xs text-slate-600 gap-3"
+        >
+          <div id="paginationInfo">Showing 0 of 0 entries</div>
+          <div class="flex items-center gap-2">
+            <button
+              id="prevPageBtn"
+              type="button"
+              disabled
+              class="px-3 py-1.5 rounded-lg border border-slate-300 bg-white hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed font-medium transition-colors"
+            >
+              Previous
+            </button>
+            <span id="pageIndicator" class="font-bold text-slate-700 px-2">Page 1</span>
+            <button
+              id="nextPageBtn"
+              type="button"
+              disabled
+              class="px-3 py-1.5 rounded-lg border border-slate-300 bg-white hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed font-medium transition-colors"
+            >
+              Next
+            </button>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- Activity Details Modal -->
+    <div
+      id="detailsModal"
+      class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm hidden"
+      role="dialog"
+      aria-modal="true"
+    >
+      <div
+        class="bg-white rounded-2xl shadow-2xl border border-slate-200 w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-150"
+      >
+        <!-- Modal Header -->
+        <div class="flex items-center justify-between px-6 py-4 border-b border-slate-100 bg-slate-50/80">
+          <div>
+            <h3 class="text-base font-bold text-slate-800">Activity Log Details</h3>
+            <p id="modalTimestamp" class="text-xs text-slate-400 mt-0.5">--</p>
+          </div>
+          <button
+            id="closeModalBtn"
+            type="button"
+            class="text-slate-400 hover:text-slate-600 p-1.5 rounded-lg hover:bg-slate-200/50 transition-colors cursor-pointer"
+            aria-label="Close modal"
+          >
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+
+        <!-- Modal Body (Scrollable) -->
+        <div class="p-6 overflow-y-auto space-y-4 text-xs text-slate-700">
+          <!-- Summary Grid -->
+          <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 bg-slate-50 p-3.5 rounded-xl border border-slate-200/70">
+            <div>
+              <span class="block text-[10px] font-bold uppercase text-slate-400">Administrator</span>
+              <span id="modalAdmin" class="font-semibold text-slate-800 break-all">--</span>
+            </div>
+            <div>
+              <span class="block text-[10px] font-bold uppercase text-slate-400">Action</span>
+              <span id="modalAction" class="font-bold">--</span>
+            </div>
+            <div>
+              <span class="block text-[10px] font-bold uppercase text-slate-400">Module</span>
+              <span id="modalModule" class="font-semibold text-slate-800">--</span>
+            </div>
+            <div>
+              <span class="block text-[10px] font-bold uppercase text-slate-400">Target ID</span>
+              <span id="modalTargetId" class="font-mono text-slate-600 break-all">None</span>
+            </div>
+            <div>
+              <span class="block text-[10px] font-bold uppercase text-slate-400">IP Address</span>
+              <span id="modalIp" class="font-mono text-slate-600">--</span>
+            </div>
+            <div>
+              <span class="block text-[10px] font-bold uppercase text-slate-400">User Agent</span>
+              <span id="modalUserAgent" class="text-slate-500 truncate block" title="">--</span>
+            </div>
+          </div>
+
+          <!-- Description -->
+          <div>
+            <label class="block text-[10px] font-bold uppercase text-slate-400 mb-1">Description</label>
+            <div id="modalDescription" class="p-3 bg-slate-50 border border-slate-200/70 rounded-xl text-slate-800 font-medium">
+              --
+            </div>
+          </div>
+
+          <!-- Previous and Updated Values (Diff View) -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+            <div>
+              <label class="block text-[10px] font-bold uppercase text-slate-500 mb-1">
+                Previous Values (old_values)
+              </label>
+              <pre
+                id="modalOldValues"
+                class="p-3 rounded-xl bg-slate-900 text-slate-100 font-mono text-[11px] overflow-x-auto max-h-48 border border-slate-800"
+              >None</pre>
+            </div>
+            <div>
+              <label class="block text-[10px] font-bold uppercase text-emerald-600 mb-1">
+                Updated Values (new_values)
+              </label>
+              <pre
+                id="modalNewValues"
+                class="p-3 rounded-xl bg-slate-900 text-slate-100 font-mono text-[11px] overflow-x-auto max-h-48 border border-slate-800"
+              >None</pre>
+            </div>
+          </div>
+        </div>
+
+        <!-- Modal Footer -->
+        <div class="px-6 py-3 border-t border-slate-100 bg-slate-50 flex justify-end">
+          <button
+            id="modalCloseBtnBottom"
+            type="button"
+            class="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold rounded-xl transition-colors cursor-pointer text-xs"
+          >
+            Close
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <footer class="py-4 text-center text-xs text-slate-400">
+      Findly AI &bull; Admin Audit Logging System
+    </footer>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+    <script src="../config.js"></script>
+    <script type="module" src="../assets/script/audit-logs.js"></script>
+  </body>
+</html>
