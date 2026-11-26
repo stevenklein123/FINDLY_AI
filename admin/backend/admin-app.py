@@ -17,6 +17,7 @@ import io
 import csv
 import json
 import re
+from datetime import datetime, timezone
 from flask import Flask, request, jsonify, Response
 from flask_cors import CORS
 from dotenv import load_dotenv
@@ -252,17 +253,64 @@ def health():
     return "admin ok"
 
 
+# ---- Summary cache (CAO: memory hierarchy / cache) ----
+# The cache sits between the dashboard and the database (the slow "main memory").
+# How long a cached copy stays valid, in seconds (change it in .env if you like):
+CACHE_TTL_SECONDS = float(os.environ.get("CACHE_TTL_SECONDS", "30"))
+_summary_cache = {"data": None, "stored_at": 0.0}
+CACHE_STATS = {
+    "hits": 0,
+    "misses": 0,
+    "hit_time_total": 0.0,   # seconds spent serving cache hits
+    "miss_time_total": 0.0,  # seconds spent serving misses (trips to the database)
+}
+AUTH_STATS = {"count": 0, "total": 0.0}  # seconds spent checking the admin login
+
+
+def fetch_summary_counts():
+    """The slow path: 4 trips to the database."""
+    return dict(
+        missing_items=count("lost_items"),
+        found_items=count("found_items"),
+        match_items=count("match_items"),
+        claimed=count("match_items", status="claimed"),
+    )
+
+
+def get_summary_cached():
+    """Returns (summary_dict, was_hit). Counts hits/misses and times each path."""
+    start = time.perf_counter()
+    cached = _summary_cache["data"]
+    fresh = (time.time() - _summary_cache["stored_at"]) < CACHE_TTL_SECONDS
+    if cached is not None and fresh:
+        data = dict(cached)
+        CACHE_STATS["hits"] += 1
+        CACHE_STATS["hit_time_total"] += time.perf_counter() - start
+        return data, True
+
+    data = fetch_summary_counts()
+    _summary_cache["data"] = data
+    _summary_cache["stored_at"] = time.time()
+    CACHE_STATS["misses"] += 1
+    CACHE_STATS["miss_time_total"] += time.perf_counter() - start
+    return dict(data), False
+
+
+def invalidate_summary_cache():
+    """Called after a write so the dashboard never shows stale counts."""
+    _summary_cache["data"] = None
+
+
 @app.get("/admin/summary")
 def admin_summary():
+    auth_start = time.perf_counter()
     if not require_admin():
         return jsonify(error="Unauthorized"), 401
+    AUTH_STATS["count"] += 1
+    AUTH_STATS["total"] += time.perf_counter() - auth_start
     try:
-        return jsonify(
-            missing_items=count("lost_items"),
-            found_items=count("found_items"),
-            match_items=count("match_items"),
-            claimed=count("match_items", status="claimed"),
-        )
+        data, _ = get_summary_cached()
+        return jsonify(data)
     except Exception as e:
         print("summary error:", e)
         return jsonify(error=str(e)), 500
@@ -317,6 +365,8 @@ def admin_mark_claimed(match_id):
             "found_item_status": "claimed",
             "lost_item_status": "claimed",
         }
+
+        invalidate_summary_cache()  # NEW: counts changed, drop the cached copy
 
         # Automatically log the administrative action
         log_admin_action(
@@ -651,6 +701,233 @@ def export_audit_logs():
         print("export_audit_logs error:", e)
         return jsonify(error=str(e)), 500
 
+
+# =========================================================================
+# PERFORMANCE / COMPUTER ARCHITECTURE METRICS (read-only)
+# =========================================================================
+def parse_ts(value):
+    """Turns a Supabase timestamp string into a timezone-aware datetime."""
+    if not value:
+        return None
+    try:
+        s = str(value).replace("Z", "+00:00")
+        # keep exactly 6 fractional digits (older Python versions need this)
+        s = re.sub(r"\.(\d+)", lambda m: "." + (m.group(1) + "000000")[:6], s)
+        dt = datetime.fromisoformat(s)
+        if dt.tzinfo is None:
+            dt = dt.replace(tzinfo=timezone.utc)
+        return dt
+    except ValueError:
+        return None
+
+
+def hours_between(start, end):
+    if not start or not end:
+        return None
+    return max(0.0, (end - start).total_seconds() / 3600.0)
+
+
+def stats_block(values):
+    values = [v for v in values if v is not None]
+    if not values:
+        return {"count": 0, "avg": None, "min": None, "max": None}
+    return {
+        "count": len(values),
+        "avg": round(sum(values) / len(values), 4),
+        "min": round(min(values), 4),
+        "max": round(max(values), 4),
+    }
+
+
+def number_views(n):
+    """One integer shown in decimal, hexadecimal and binary."""
+    n = int(n)
+    return {"decimal": n, "hex": hex(n), "binary": bin(n)}
+
+
+@app.get("/admin/performance")
+def admin_performance():
+    if not require_admin():
+        return jsonify(error="Unauthorized"), 401
+    try:
+        # 1. Fetch the matches (a trip to the database = slow "main memory")
+        fetch_start = time.perf_counter()
+        rows = (
+            sb.table("match_items")
+            .select("created_at, lost_items(created_at)")
+            .execute()
+            .data
+        ) or []
+        fetch_ms = (time.perf_counter() - fetch_start) * 1000
+
+        # 2. Calculate time-to-find (timed in nanoseconds)
+        t0 = time.perf_counter_ns()
+        find_hours = []
+        latest = None  # (matched_at, lost_at) of the newest match
+        for row in rows:
+            matched_at = parse_ts(row.get("created_at"))
+            lost_at = parse_ts((row.get("lost_items") or {}).get("created_at"))
+            find_hours.append(hours_between(lost_at, matched_at))
+            if matched_at and lost_at and (latest is None or matched_at > latest[0]):
+                latest = (matched_at, lost_at)
+        compute_ns = time.perf_counter_ns() - t0
+
+        records = len(rows)
+        compute_s = compute_ns / 1e9
+        execution = {
+            "records": records,
+            "fetch_ms": round(fetch_ms, 3),
+            "compute_ms": round(compute_ns / 1e6, 4),
+            "us_per_record": round(compute_ns / 1000 / records, 3) if records else None,
+            "throughput_per_sec": round(records / compute_s) if records and compute_s > 0 else None,
+        }
+
+        # 3. Cache numbers measured on real dashboard requests
+        hits, misses = CACHE_STATS["hits"], CACHE_STATS["misses"]
+        accesses = hits + misses
+        cache = {
+            "ttl_seconds": CACHE_TTL_SECONDS,
+            "hits": hits,
+            "misses": misses,
+            "hit_ratio": round(hits / accesses, 4) if accesses else None,
+            "hit_time_ms": None,
+            "miss_penalty_ms": None,
+            "amat_ms": None,
+        }
+        amdahl = {
+            "auth_ms": None,
+            "miss_ms": None,
+            "hit_ms": None,
+            "fraction_improved": None,
+            "stage_speedup": None,
+            "overall_speedup": None,
+            "max_speedup": None,
+        }
+        if hits and misses:
+            hit_ms = CACHE_STATS["hit_time_total"] / hits * 1000
+            miss_ms = CACHE_STATS["miss_time_total"] / misses * 1000
+            penalty_ms = max(0.0, miss_ms - hit_ms)  # EXTRA time a miss costs
+            amat_ms = hit_ms + (misses / accesses) * penalty_ms
+            cache["hit_time_ms"] = round(hit_ms, 5)
+            cache["miss_penalty_ms"] = round(penalty_ms, 3)
+            cache["amat_ms"] = round(amat_ms, 4)
+
+            # 4. Amdahl's Law on a real dashboard request:
+            #    request time = login check (not cached) + counts (cached or not)
+            if AUTH_STATS["count"] and hit_ms > 0:
+                auth_ms = AUTH_STATS["total"] / AUTH_STATS["count"] * 1000
+                f = miss_ms / (auth_ms + miss_ms)  # part that the cache can speed up
+                s = miss_ms / hit_ms               # how much faster that part gets
+                amdahl.update(
+                    auth_ms=round(auth_ms, 3),
+                    miss_ms=round(miss_ms, 3),
+                    hit_ms=round(hit_ms, 5),
+                    fraction_improved=round(f, 4),
+                    stage_speedup=round(s, 1),
+                    overall_speedup=round(1 / ((1 - f) + f / s), 2),
+                    max_speedup=round(1 / (1 - f), 2) if f < 1 else None,
+                )
+
+        # 5. Data representation: newest match, times as binary integers
+        representation = None
+        if latest:
+            match_epoch = int(latest[0].timestamp())
+            lost_epoch = int(latest[1].timestamp())
+            representation = {
+                "lost": number_views(lost_epoch),
+                "match": number_views(match_epoch),
+                "difference": number_views(max(0, match_epoch - lost_epoch)),
+            }
+
+        return jsonify(
+            time_to_find=stats_block(find_hours),
+            execution=execution,
+            cache=cache,
+            amdahl=amdahl,
+            representation=representation,
+        )
+    except Exception as e:
+        print("performance error:", e)
+        return jsonify(error=str(e)), 500
+
+
+# =========================================================================
+# CACHE BENCHMARK (read-only, runs only when the dashboard button is clicked)
+# =========================================================================
+BENCH_TIME_BUDGET_S = 12  # stop early so the request does not hit the server time limit
+
+
+def simulate_summary_requests(n, use_cache, clear_every=None):
+    """Runs n dashboard-count lookups on a private cache and times each one."""
+    store = None
+    hits = misses = done = 0
+    hit_total = miss_total = 0.0
+    began = time.perf_counter()
+    for i in range(1, n + 1):
+        if time.perf_counter() - began > BENCH_TIME_BUDGET_S:
+            break
+        if clear_every and i > 1 and (i - 1) % clear_every == 0:
+            store = None  # pretend something was written, so the cached copy is stale
+        start = time.perf_counter()
+        if use_cache and store is not None:
+            _ = dict(store)  # cache hit
+            hits += 1
+            hit_total += time.perf_counter() - start
+        else:
+            store = fetch_summary_counts()  # cache miss: go to the database
+            misses += 1
+            miss_total += time.perf_counter() - start
+        done += 1
+
+    hit_ms = hit_total / hits * 1000 if hits else None
+    miss_ms = miss_total / misses * 1000 if misses else None
+    penalty_ms = max(0.0, miss_ms - hit_ms) if hits and misses else None
+    if hits and misses:
+        amat_ms = hit_ms + (misses / done) * penalty_ms
+    else:
+        amat_ms = miss_ms  # no hits: every access goes to the database
+    return {
+        "requests": done,
+        "hits": hits,
+        "misses": misses,
+        "hit_ratio": round(hits / done, 4),
+        "hit_time_ms": round(hit_ms, 5) if hit_ms is not None else None,
+        "miss_penalty_ms": round(penalty_ms, 3) if penalty_ms is not None else None,
+        "amat_ms": round(amat_ms, 4),
+        "avg_ms": round((hit_total + miss_total) / done * 1000, 4),
+        "total_ms": round((hit_total + miss_total) * 1000, 2),
+    }
+
+
+@app.get("/admin/benchmark")
+def admin_benchmark():
+    if not require_admin():
+        return jsonify(error="Unauthorized"), 401
+    try:
+        try:
+            n = int(request.args.get("n", 10))
+        except ValueError:
+            n = 10
+        n = max(4, min(n, 20))
+
+        setups = [
+            ("No cache", simulate_summary_requests(n, use_cache=False)),
+            ("Cache", simulate_summary_requests(n, use_cache=True)),
+            (
+                "Cache, cleared every 5th request",
+                simulate_summary_requests(n, use_cache=True, clear_every=5),
+            ),
+        ]
+        baseline = setups[0][1]["avg_ms"]
+        results = []
+        for name, r in setups:
+            r["name"] = name
+            r["speedup"] = round(baseline / r["avg_ms"], 1) if r["avg_ms"] > 0 else None
+            results.append(r)
+        return jsonify(requests=n, setups=results)
+    except Exception as e:
+        print("benchmark error:", e)
+        return jsonify(error=str(e)), 500
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5001))
