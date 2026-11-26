@@ -160,6 +160,154 @@
           <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
         </svg>
       </a>
+    
+          <!-- ===== AR101: Performance metrics (Computer Architecture and Organization) ===== -->
+      <section class="perf-section" id="perf-section">
+        <div class="perf-head">
+          <div>
+            <h2 class="perf-heading">Performance Metrics</h2>
+            <p class="perf-sub">
+              Computer Architecture and Organization (AR101): measuring how the
+              admin dashboard uses a cache in front of the database.
+            </p>
+          </div>
+          <div class="perf-actions">
+            <button id="perfRefreshBtn" type="button" class="perf-btn">
+              Refresh metrics
+            </button>
+            <button id="perfBenchBtn" type="button" class="perf-btn">
+              Run cache benchmark
+            </button>
+          </div>
+        </div>
+        <p id="perf-status" class="perf-status">Loading...</p>
+
+        <div class="perf-grid">
+          <!-- 1. Time to find (the app's own feature, not a CAO concept) -->
+          <div class="perf-card">
+            <div class="perf-title">Time to Find an Item</div>
+            <div class="perf-concept">The data being measured</div>
+            <code class="perf-formula">time = match created - lost report created</code>
+            <div class="perf-row"><span>Average</span><strong data-perf="time_to_find.avg" data-fmt="hours">--</strong></div>
+            <div class="perf-row"><span>Fastest</span><strong data-perf="time_to_find.min" data-fmt="hours">--</strong></div>
+            <div class="perf-row"><span>Slowest</span><strong data-perf="time_to_find.max" data-fmt="hours">--</strong></div>
+            <div class="perf-row"><span>Matches measured</span><strong data-perf="time_to_find.count" data-fmt="num">--</strong></div>
+          </div>
+
+          <!-- 2. Cache, live -->
+          <div class="perf-card">
+            <div class="perf-title">Cache (Live)</div>
+            <div class="perf-concept">Memory hierarchy and cache</div>
+            <code class="perf-formula">AMAT = hit time + miss rate x miss penalty</code>
+            <div class="perf-row"><span>Cache lifetime</span><strong data-perf="cache.ttl_seconds" data-fmt="sec">--</strong></div>
+            <div class="perf-row"><span>Hits</span><strong data-perf="cache.hits" data-fmt="num">--</strong></div>
+            <div class="perf-row"><span>Misses</span><strong data-perf="cache.misses" data-fmt="num">--</strong></div>
+            <div class="perf-row"><span>Hit ratio</span><strong data-perf="cache.hit_ratio" data-fmt="pct">--</strong></div>
+            <div class="perf-row"><span>Hit time</span><strong data-perf="cache.hit_time_ms" data-fmt="ms">--</strong></div>
+            <div class="perf-row"><span>Miss penalty (extra time)</span><strong data-perf="cache.miss_penalty_ms" data-fmt="ms">--</strong></div>
+            <div class="perf-row"><span>Average access time (AMAT)</span><strong data-perf="cache.amat_ms" data-fmt="ms">--</strong></div>
+            <p class="perf-note">
+              Counts since the backend started. A hit needs a refresh within
+              the cache lifetime, so click "Refresh metrics" a few times.
+            </p>
+          </div>
+
+          <!-- 3. Amdahl -->
+          <div class="perf-card">
+            <div class="perf-title">Speedup Limit (Amdahl's Law)</div>
+            <div class="perf-concept">Performance, measured on real dashboard requests</div>
+            <code class="perf-formula">speedup = 1 / ((1 - f) + f / s)</code>
+            <div class="perf-row"><span>Login check (never cached)</span><strong data-perf="amdahl.auth_ms" data-fmt="ms">--</strong></div>
+            <div class="perf-row"><span>Counts from database (miss)</span><strong data-perf="amdahl.miss_ms" data-fmt="ms">--</strong></div>
+            <div class="perf-row"><span>Counts from cache (hit)</span><strong data-perf="amdahl.hit_ms" data-fmt="ms">--</strong></div>
+            <div class="perf-row"><span>Part the cache can improve (f)</span><strong data-perf="amdahl.fraction_improved" data-fmt="pct">--</strong></div>
+            <div class="perf-row"><span>Speedup of that part (s)</span><strong data-perf="amdahl.stage_speedup" data-fmt="x">--</strong></div>
+            <div class="perf-row"><span>Overall speedup</span><strong data-perf="amdahl.overall_speedup" data-fmt="x">--</strong></div>
+            <div class="perf-row"><span>Maximum possible speedup</span><strong data-perf="amdahl.max_speedup" data-fmt="x">--</strong></div>
+            <p class="perf-note">
+              Every request still pays for the login check, so even a very fast
+              cache cannot speed up the whole request by more than the maximum.
+            </p>
+          </div>
+
+          <!-- 4. Execution time -->
+          <div class="perf-card">
+            <div class="perf-title">Execution Time</div>
+            <div class="perf-concept">Performance measurement</div>
+            <code class="perf-formula">throughput = records / compute time</code>
+            <div class="perf-row"><span>Records processed</span><strong data-perf="execution.records" data-fmt="num">--</strong></div>
+            <div class="perf-row"><span>Database fetch time</span><strong data-perf="execution.fetch_ms" data-fmt="ms">--</strong></div>
+            <div class="perf-row"><span>Calculation time</span><strong data-perf="execution.compute_ms" data-fmt="ms">--</strong></div>
+            <div class="perf-row"><span>Time per record</span><strong data-perf="execution.us_per_record" data-fmt="us">--</strong></div>
+            <div class="perf-row"><span>Throughput (records/sec)</span><strong data-perf="execution.throughput_per_sec" data-fmt="num">--</strong></div>
+            <p class="perf-note">
+              Fetching from the database takes far longer than calculating, which
+              is why the cache helps.
+            </p>
+          </div>
+
+          <!-- 5. Data representation -->
+          <div class="perf-card perf-wide">
+            <div class="perf-title">Data Representation</div>
+            <div class="perf-concept">Binary, hexadecimal and integer arithmetic</div>
+            <code class="perf-formula">time to find = match time - lost report time (in seconds)</code>
+            <div class="perf-scroll">
+              <table class="perf-table">
+                <thead>
+                  <tr><th></th><th>Decimal</th><th>Hexadecimal</th><th>Binary</th></tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <th>Lost report (Unix time)</th>
+                    <td data-perf="representation.lost.decimal" data-fmt="text">--</td>
+                    <td class="perf-mono" data-perf="representation.lost.hex" data-fmt="text">--</td>
+                    <td class="perf-mono" data-perf="representation.lost.binary" data-fmt="text">--</td>
+                  </tr>
+                  <tr>
+                    <th>Match (Unix time)</th>
+                    <td data-perf="representation.match.decimal" data-fmt="text">--</td>
+                    <td class="perf-mono" data-perf="representation.match.hex" data-fmt="text">--</td>
+                    <td class="perf-mono" data-perf="representation.match.binary" data-fmt="text">--</td>
+                  </tr>
+                  <tr>
+                    <th>Difference (seconds)</th>
+                    <td data-perf="representation.difference.decimal" data-fmt="text">--</td>
+                    <td class="perf-mono" data-perf="representation.difference.hex" data-fmt="text">--</td>
+                    <td class="perf-mono" data-perf="representation.difference.binary" data-fmt="text">--</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <p class="perf-note">Shown for the newest match.</p>
+          </div>
+
+          <!-- 6. Benchmark -->
+          <div class="perf-card perf-wide">
+            <div class="perf-title">Cache Benchmark</div>
+            <div class="perf-concept">Performance comparison across configurations</div>
+            <code class="perf-formula">speedup = no-cache average / setup average</code>
+            <div class="perf-scroll">
+              <table class="perf-table">
+                <thead>
+                  <tr>
+                    <th>Setup</th><th>Requests</th><th>Hits</th><th>Misses</th>
+                    <th>Hit ratio</th><th>Hit time</th><th>Miss penalty</th>
+                    <th>AMAT</th><th>Average per request</th><th>Speedup</th>
+                  </tr>
+                </thead>
+                <tbody id="bench-body">
+                  <tr><td colspan="10">Click "Run cache benchmark" to measure.</td></tr>
+                </tbody>
+              </table>
+            </div>
+            <p class="perf-note">
+              Each setup runs the dashboard-count lookup about 10 times on its
+              own private cache. This only reads data and takes a few seconds.
+              The speedup is limited by the hit ratio.
+            </p>
+          </div>
+        </div>
+      </section>
     </main>
 
     <footer class="py-4"></footer>
